@@ -10,7 +10,9 @@ resp = requests.get(baseURL)
 if(resp.status_code == 200):
     print(resp.content.decode("utf-8"))
     print("it worked")
-    print(json.loads(resp.content.decode("utf-8")))
+    loaded = json.loads(resp.content.decode("utf-8").replace(")]}'",''))
 else:
     raise ApiError('GET /tasks/ {}'.format(resp.status_code))
 
+with open('data.json','w') as outfile:
+	outfile.write(resp.content.decode("utf-8").replace(")]}'",'').strip())

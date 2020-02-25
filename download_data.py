@@ -1,23 +1,29 @@
 import requests
 import json
 import re
+from datetime import timedelta, date
 
-S = 1
-while True:
-	print("S=",S)
-	baseURL = f"https://gerrit-review.googlesource.com/changes/?q=project:gerrit&S={S}&n=500&o=ALL_FILES&o=LABELS"
+def daterange(start_date, end_date):
+	for n in range(int ((end_date - start_date).days)):
+		yield start_date + timedelta(n)
+
+start_date = date(2019, 1, 1)
+end_date = date(2019, 1, 31)
+total_string = ''
+for single_date in daterange(start_date, end_date):
+	print(single_date.strftime("%Y-%m-%d"))
+	day_start = '{' + str(single_date) + ' 00:00:00.000}'
+	day_end =  '{' + str(single_date) + ' 23:59:99.999}'
+	baseURL = f"https://gerrit-review.googlesource.com/changes/?q=project:gerrit AND after:{day_start} AND before:{day_end}&o=LABELS"
 	print(baseURL)
 	resp = requests.get(baseURL)
-	# resp_parsed = re.sub(r'^jsonp\d+\(|\)\s+$', '', resp.text)
-
 	if(resp.status_code == 200):
-	    print("it worked")
-	    loaded = json.loads(resp.content.decode("utf-8").replace(")]}'",''))
-	    S+=500
+		print("it worked")
+		loaded = json.loads(resp.content.decode("utf-8").replace(")]}'",''))
+		total_string = total_string + resp.content.decode("utf-8").replace(")]}'",'').strip()
 	else:
-	    break
-	if S > 5000:
-		break
+		print(resp.status_code)
 
+# print(total_string)
 with open('data.json','w') as outfile:
-	outfile.write(resp.content.decode("utf-8").replace(")]}'",'').strip())
+	outfile.write(total_string)

@@ -3,14 +3,14 @@ import json
 import re
 from datetime import timedelta, date
 
-def daterange(start_date, end_date):
+def get_dates(start_date, end_date):
 	for n in range(int ((end_date - start_date).days)):
 		yield start_date + timedelta(n)
 
 start_date = date(2019, 1, 1)
-end_date = date(2019, 1, 31)
+end_date = date(2019, 12, 31)
 total_string = ''
-for single_date in daterange(start_date, end_date):
+for single_date in get_dates(start_date, end_date):
 	print(single_date.strftime("%Y-%m-%d"))
 	day_start = '{' + str(single_date) + ' 00:00:00.000}'
 	day_end =  '{' + str(single_date) + ' 23:59:99.999}'

@@ -3,6 +3,7 @@ import csv
 import pandas as pd
 import math
 from pathlib import Path
+import requests
 
 
 def intake_data_frame(filename):
@@ -22,4 +23,13 @@ def intake_data_frame(filename):
 with open('test_data.json') as json_file:
 	data = json.load(json_file)
 
-print(data[0]['change_id'])
+for line in data:
+	change_id = line["change_id"]
+	baseURL = f"https://gerrit-review.googlesource.com/changes/{change_id}/comments"
+	resp = requests.get(baseURL)
+	if(resp.status_code == 200):
+		print("it worked")
+		line["comments"] = resp.content.decode("utf-8").replace(")]}'",'')
+
+outfile = open("test_data_with_comments.json", "w")
+outfile.write(json.dumps(data))

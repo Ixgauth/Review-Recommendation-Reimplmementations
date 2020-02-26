@@ -11,7 +11,6 @@ def get_dates(start_date, end_date):
 start_date = date(2019, 1, 1)
 end_date = date(2019, 1, 3)
 json_list = []
-total_string = ''
 for single_date in get_dates(start_date, end_date):
 	print(single_date.strftime("%Y-%m-%d"))
 	day_start = '{' + str(single_date) + ' 00:00:00.000}'
@@ -24,15 +23,22 @@ for single_date in get_dates(start_date, end_date):
 		loaded = json.loads(resp.content.decode("utf-8").replace(")]}'",''))
 		for row in loaded:
 			json_list.append(row)
-		total_string = total_string + resp.content.decode("utf-8").replace(")]}'",'').strip()
 	else:
 		print(resp.status_code)
 
+for line in json_list:
+	change_id = line["change_id"]
+	print(change_id)
+	baseURL = f"https://gerrit-review.googlesource.com/changes/{change_id}/comments"
+	resp = requests.get(baseURL)
+	if(resp.status_code == 200):
+		line["comments"] = json.loads(resp.content.decode("utf-8").replace(")]}'",''))
+		print(line["comments"])
 
 outfile = open("test_data.json", "w")
 outfile.write(json.dumps(json_list))
 
-
+print(json_list[0]["comments"])
 # for line in json_list:
 # 	outfile.write(json.dumps(line))
 

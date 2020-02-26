@@ -28,12 +28,10 @@ for single_date in get_dates(start_date, end_date):
 
 for line in json_list:
 	change_id = line["change_id"]
-	print(change_id)
 	baseURL = f"https://gerrit-review.googlesource.com/changes/{change_id}/comments"
 	resp = requests.get(baseURL)
 	if(resp.status_code == 200):
 		line["comments"] = json.loads(resp.content.decode("utf-8").replace(")]}'",''))
-		print(line["comments"])
 
 outfile = open("test_data.json", "w")
 outfile.write(json.dumps(json_list))

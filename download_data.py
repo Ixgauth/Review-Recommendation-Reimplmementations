@@ -10,7 +10,7 @@ def get_dates(start_date, end_date):
 
 start_date = date(2019, 1, 1)
 end_date = date(2019, 1, 3)
-json_list = ''
+json_list = []
 total_string = ''
 for single_date in get_dates(start_date, end_date):
 	print(single_date.strftime("%Y-%m-%d"))
@@ -22,14 +22,19 @@ for single_date in get_dates(start_date, end_date):
 	if(resp.status_code == 200):
 		print("it worked")
 		loaded = json.loads(resp.content.decode("utf-8").replace(")]}'",''))
-		json_list = json_list + json.dumps(loaded)
+		for row in loaded:
+			json_list.append(row)
 		total_string = total_string + resp.content.decode("utf-8").replace(")]}'",'').strip()
 	else:
 		print(resp.status_code)
 
-# print(json_list)
+
 outfile = open("test_data.json", "w")
-outfile.write(json_list)
+outfile.write(json.dumps(json_list))
+
+
+# for line in json_list:
+# 	outfile.write(json.dumps(line))
 
 
 # df = pd.DataFrame(json_list)

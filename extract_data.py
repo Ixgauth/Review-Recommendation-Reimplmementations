@@ -40,6 +40,7 @@ for line in data:
 	row = []
 	for line_loop in data_list_loop:
 		row.append(line_loop[1])
-	df2 = pd.DataFrame([row], columns = columns)
-	df.append(df2)
-print(df)
+	print(len(row))
+	df.loc[str(i)] = row
+	i+=1
+print(df["owner"])

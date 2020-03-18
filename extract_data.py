@@ -6,41 +6,16 @@ from pathlib import Path
 import requests
 
 
-with open('test_data_with_comments.json') as json_file:
-	data = json.load(json_file)
+def get_comment_info(single_comment):
+	for line in single_comment:
+		if 'line' in line.keys():
+			print(line['line'])
+		else:
+			print('nope')
 
+df = pd.read_json('test_data_with_comments.json')
 
-data_items = data[0].items()
-data_list = list(data_items)
-
-columns = []
-first_row = []
-
-for line in data_list:
-	columns.append(line[0])
-	first_row.append(line[1])
-
-# for line in first_row:
-# 	print(line)
-
-df = pd.DataFrame([first_row], columns = columns)
-
-i =0
-
-for line in data:
-	if i == 0:
-		i+=1
-		continue
-	if(len(line)!= len(columns)):
-		print("problem")
-		continue
-	print("gothere")
-	data_items_loop = line.items()
-	data_list_loop = list(data_items_loop)
-	row = []
-	for line_loop in data_list_loop:
-		row.append(line_loop[1])
-	print(len(row))
-	df.loc[str(i)] = row
-	i+=1
-print(df["owner"])
+for line in df['comments']:
+	if isinstance(line,dict):
+		for key in line.keys():
+			get_comment_info(line[key])

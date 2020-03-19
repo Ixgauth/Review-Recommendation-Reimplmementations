@@ -9,7 +9,7 @@ def get_dates(start_date, end_date):
 		yield start_date + timedelta(n)
 
 start_date = date(2019, 1, 1)
-end_date = date(2019, 1, 3)
+end_date = date(2019, 1, 4)
 json_list = []
 for single_date in get_dates(start_date, end_date):
 	print(single_date.strftime("%Y-%m-%d"))
@@ -26,6 +26,9 @@ for single_date in get_dates(start_date, end_date):
 	else:
 		print(resp.status_code)
 
+df = pd.DataFrame(json_list)
+df.to_csv('test_data.csv', index = False, header=True)
+
 for line in json_list:
 	change_id = line["change_id"]
 	baseURL = f"https://gerrit-review.googlesource.com/changes/{change_id}/comments"
@@ -33,10 +36,14 @@ for line in json_list:
 	if(resp.status_code == 200):
 		line["comments"] = json.loads(resp.content.decode("utf-8").replace(")]}'",''))
 
-outfile = open("test_data.json", "w")
+
+new_df = pd.DataFrame(json_list)
+new_df.to_csv('test_data_with_comments.csv', index = False, header = True)
+
+outfile = open("test_data_with_comments.json", "w")
 outfile.write(json.dumps(json_list))
 
-print(json_list[0]["comments"])
+# print(json_list[0]["comments"])
 # for line in json_list:
 # 	outfile.write(json.dumps(line))
 

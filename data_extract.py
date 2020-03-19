@@ -30,4 +30,4 @@ for line in df['revisions']:
 
 for line in df['comments']:
 	print(get_comment_files(line))
-	print(line)
+	

@@ -4,15 +4,20 @@ import pandas as pd
 import math
 from pathlib import Path
 import requests
+from datetime import timedelta, date, datetime
+
 
 
 def get_comment_info(single_comment):
 	info = []
 	for line in single_comment:
-		info_tuple = line['author']['_account_id'], line['updated']
+		date_time_str = line['updated']
+		date_time_str = date_time_str.replace('.000000000', '')
+		date_time_obj = datetime.strptime(date_time_str, '%Y-%m-%d %H:%M:%S')
+		date_obj = date_time_obj.date()
+		info_tuple = line['author']['_account_id'], str(date_obj)
 		info.append(info_tuple)
 	return info
-
 
 
 def get_comment_tuples(owner, comments):
@@ -29,6 +34,15 @@ def get_comment_tuples(owner, comments):
 				file_comment_tuple = (key, author[0],author[1])
 				tuple_list.append(file_comment_tuple)
 	return tuple_list
+
+def get_most_recent_workday(file):
+	most_recent_date = date(2000,1,1)
+	for author in file.keys():
+		current_date = datetime.strptime(file[author][1], '%Y-%m-%d').date()
+		if current_date > most_recent_date:
+			most_recent_date = current_date
+	print(most_recent_date)
+	return most_recent_date
 
 def arrange_data(file_comment_tuple_list):
 	file_dictionary = {}
@@ -67,3 +81,4 @@ file_dictionary = arrange_data(file_comment_tuple_list)
 
 for key in file_dictionary.keys():
 	print(file_dictionary[key])
+	get_most_recent_workday(file_dictionary[key])

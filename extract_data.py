@@ -123,17 +123,43 @@ def obtain_C_score(author, total_number_of_comments):
 	return C_score
 
 
+def obtain_W_score(author, total_number_of_workdays):
+	workdays = author[3]
+	W_score = workdays/total_number_of_workdays
+	author.append(W_score)
+	return W_score
+
+def obtain_T_score(author, most_recent_date):
+	last_date_str = author[1]
+	last_date = datetime.strptime(last_date_str, '%Y-%m-%d').date()
+	most_recent = datetime.strptime(most_recent_date, '%Y-%m-%d').date()
+	delta = last_date - most_recent
+	difference = abs(delta.days)
+	if difference == 0:
+		author.append(1)
+		return 1
+	else:
+		T_score = 1/difference
+		author.append(T_score)
+		return T_score
+
+
 def obtain_X_factor(file_dictionary):
 	for key in file_dictionary.keys():
 		current_file = file_dictionary[key]
 		total_comments = current_file['total_number_of_comments']
+		total_workdays = current_file['total_number_of_workdays']
+		most_recent = current_file['most_recent_date']
 		for a_key in current_file.keys():
 			if a_key == 'most_recent_date' or a_key == 'total_number_of_comments' or a_key == 'total_number_of_workdays':
 				continue
 			author = current_file[a_key]
 			C_score = obtain_C_score(author, total_comments)
-		print(file_dictionary[key])
-
+			W_score = obtain_W_score(author, total_workdays)
+			T_score = obtain_T_score(author, most_recent)
+			X_factor = C_score + W_score + T_score
+			author.append(X_factor)
+	return file_dictionary
 
 
 df = pd.read_json('test_data_with_comments.json')
@@ -152,4 +178,7 @@ file_dictionary = arrange_data(file_comment_tuple_list)
 
 file_dictionary = obtain_all_metrics(file_dictionary)
 
-obtain_X_factor(file_dictionary)
+file_dictionary = obtain_X_factor(file_dictionary)
+
+for key in file_dictionary.keys():
+	print(key, "  ", file_dictionary[key])

@@ -43,6 +43,27 @@ def get_most_recent_workday(file):
 			most_recent_date = current_date
 	return str(most_recent_date)
 
+def get_total_number_of_coments(file):
+	number_of_comments = 0
+	for key in file.keys():
+		author = file[key]
+		cur_coms = author[0]
+		number_of_comments += len(cur_coms)
+	return number_of_comments
+
+def get_total_number_of_workdays(file):
+	workdays = []
+	for key in file.keys():
+		author = file[key]
+		cur_coms = author[0]
+		for comment in cur_coms:
+			if comment in workdays:
+				continue
+			else:
+				workdays.append(comment)
+	print(len(workdays))
+	return(len(workdays))
+
 def arrange_data(file_comment_tuple_list):
 	file_dictionary = {}
 
@@ -79,8 +100,15 @@ print(len(file_comment_tuple_list))
 file_dictionary = arrange_data(file_comment_tuple_list)
 
 for key in file_dictionary.keys():
-	workday = get_most_recent_workday(file_dictionary[key])
 	current_file = file_dictionary[key]
+
+	workday = get_most_recent_workday(current_file)
+	number_of_comments = get_total_number_of_coments(current_file)
+	number_of_workdays = get_total_number_of_workdays(current_file)
+
 	file_dictionary[key]['most_recent_date'] = workday
+	file_dictionary[key]['total_number_of_comments'] = number_of_comments
+	file_dictionary[key]['total_number_of_workdays'] = number_of_workdays
+
 	print(file_dictionary[key])
 

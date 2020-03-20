@@ -6,8 +6,6 @@ from pathlib import Path
 import requests
 from datetime import timedelta, date, datetime
 
-
-
 def get_comment_info(single_comment):
 	info = []
 	for line in single_comment:
@@ -18,7 +16,6 @@ def get_comment_info(single_comment):
 		info_tuple = line['author']['_account_id'], str(date_obj)
 		info.append(info_tuple)
 	return info
-
 
 def get_comment_tuples(owner, comments):
 	tuple_list = []
@@ -43,7 +40,7 @@ def get_most_recent_workday(file):
 			most_recent_date = current_date
 	return str(most_recent_date)
 
-def get_total_number_of_coments(file):
+def get_total_number_of_comments(file):
 	number_of_comments = 0
 	for key in file.keys():
 		author = file[key]
@@ -81,7 +78,6 @@ def get_number_of_workdays_each_author(file):
 				workdays.append(comment)
 		author.append(len(workdays))
 
-
 def arrange_data(file_comment_tuple_list):
 	file_dictionary = {}
 
@@ -102,6 +98,44 @@ def arrange_data(file_comment_tuple_list):
 			file_dictionary[file] = author_dict
 	return(file_dictionary)
 
+def obtain_all_metrics(file_dictionary):
+	for key in file_dictionary.keys():
+		current_file = file_dictionary[key]
+
+		workday = get_most_recent_workday(current_file)
+		number_of_comments = get_total_number_of_comments(current_file)
+		number_of_workdays = get_total_number_of_workdays(current_file)
+
+		get_number_of_comments_each_author(current_file)
+		get_number_of_workdays_each_author(current_file)
+
+		file_dictionary[key]['most_recent_date'] = workday
+		file_dictionary[key]['total_number_of_comments'] = number_of_comments
+		file_dictionary[key]['total_number_of_workdays'] = number_of_workdays
+
+		# print(file_dictionary[key])
+	return file_dictionary
+
+def obtain_C_score(author, total_number_of_comments):
+	comments = author[0]
+	C_score = len(comments)/total_number_of_comments
+	author.append(C_score)
+	return C_score
+
+
+def obtain_X_factor(file_dictionary):
+	for key in file_dictionary.keys():
+		current_file = file_dictionary[key]
+		total_comments = current_file['total_number_of_comments']
+		for a_key in current_file.keys():
+			if a_key == 'most_recent_date' or a_key == 'total_number_of_comments' or a_key == 'total_number_of_workdays':
+				continue
+			author = current_file[a_key]
+			C_score = obtain_C_score(author, total_comments)
+		print(file_dictionary[key])
+
+
+
 df = pd.read_json('test_data_with_comments.json')
 
 file_comment_tuple_list = []
@@ -113,23 +147,9 @@ for i in range(0, len(df['owner'])):
 			
 print(len(file_comment_tuple_list))
 
-# print(file_comment_tuple_list)
 
 file_dictionary = arrange_data(file_comment_tuple_list)
 
-for key in file_dictionary.keys():
-	current_file = file_dictionary[key]
+file_dictionary = obtain_all_metrics(file_dictionary)
 
-	workday = get_most_recent_workday(current_file)
-	number_of_comments = get_total_number_of_coments(current_file)
-	number_of_workdays = get_total_number_of_workdays(current_file)
-
-	get_number_of_comments_each_author(current_file)
-	get_number_of_workdays_each_author(current_file)
-
-	file_dictionary[key]['most_recent_date'] = workday
-	file_dictionary[key]['total_number_of_comments'] = number_of_comments
-	file_dictionary[key]['total_number_of_workdays'] = number_of_workdays
-
-	print(file_dictionary[key])
-
+obtain_X_factor(file_dictionary)

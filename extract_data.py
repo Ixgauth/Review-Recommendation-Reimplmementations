@@ -69,6 +69,19 @@ def get_number_of_comments_each_author(file):
 		number_of_comments = len(author[0])
 		author.append(number_of_comments)
 
+def get_number_of_workdays_each_author(file):
+	for key in file.keys():
+		workdays = []
+		author = file[key]
+		cur_coms = author[0]
+		for comment in cur_coms:
+			if comment in workdays:
+				continue
+			else:
+				workdays.append(comment)
+		author.append(len(workdays))
+
+
 def arrange_data(file_comment_tuple_list):
 	file_dictionary = {}
 
@@ -112,6 +125,7 @@ for key in file_dictionary.keys():
 	number_of_workdays = get_total_number_of_workdays(current_file)
 
 	get_number_of_comments_each_author(current_file)
+	get_number_of_workdays_each_author(current_file)
 
 	file_dictionary[key]['most_recent_date'] = workday
 	file_dictionary[key]['total_number_of_comments'] = number_of_comments

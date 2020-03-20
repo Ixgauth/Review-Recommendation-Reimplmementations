@@ -41,8 +41,7 @@ def get_most_recent_workday(file):
 		current_date = datetime.strptime(file[author][1], '%Y-%m-%d').date()
 		if current_date > most_recent_date:
 			most_recent_date = current_date
-	print(most_recent_date)
-	return most_recent_date
+	return str(most_recent_date)
 
 def arrange_data(file_comment_tuple_list):
 	file_dictionary = {}
@@ -80,5 +79,8 @@ print(len(file_comment_tuple_list))
 file_dictionary = arrange_data(file_comment_tuple_list)
 
 for key in file_dictionary.keys():
+	workday = get_most_recent_workday(file_dictionary[key])
+	current_file = file_dictionary[key]
+	file_dictionary[key]['most_recent_date'] = workday
 	print(file_dictionary[key])
-	get_most_recent_workday(file_dictionary[key])
+

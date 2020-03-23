@@ -13,7 +13,7 @@ def get_comment_info(single_comment):
 		date_time_str = date_time_str.replace('.000000000', '')
 		date_time_obj = datetime.strptime(date_time_str, '%Y-%m-%d %H:%M:%S')
 		date_obj = date_time_obj.date()
-		info_tuple = line['author']['_account_id'], str(date_obj)
+		info_tuple = line['author']['name'], str(date_obj)
 		info.append(info_tuple)
 	return info
 
@@ -199,6 +199,29 @@ def find_best_reviewer(revision, file_dictionary, owner):
 	reviewer_list.sort(reverse=True)
 	return reviewer_list
 
+def find_power_users(file_dictionary):
+	print(len(file_dictionary.keys()))
+	user_dictiorary = {}
+	for key in file_dictionary.keys():
+		file = file_dictionary[key]
+		for reviewer_key in file.keys():
+			reviewer = file[reviewer_key]
+			if reviewer_key == 'most_recent_date' or reviewer_key == 'total_number_of_comments' or reviewer_key == 'total_number_of_workdays':
+					continue
+			if reviewer_key in user_dictiorary.keys():
+				current_score = user_dictiorary[reviewer_key]
+				file_score = reviewer[7]
+				current_score+= file_score
+				user_dictiorary[reviewer_key] = current_score
+			else:
+				file_score = reviewer[7]
+				user_dictiorary[reviewer_key] = file_score
+	reviewer_list = []
+	for reviewer in user_dictiorary.keys():
+		reviewer_list.append([user_dictiorary[reviewer], reviewer])
+	reviewer_list.sort(reverse=True)
+	for i in range(0, 10):
+		print(reviewer_list[i])
 
 df = pd.read_json('test_data_with_comments.json')
 
@@ -218,12 +241,25 @@ file_dictionary = obtain_all_metrics(file_dictionary)
 
 file_dictionary = obtain_X_factor(file_dictionary)
 
+find_power_users(file_dictionary)
 
 files_for_each_rev = []
 for line in df['revisions']:
 	files = get_all_files_for_commit(line)
 	files_for_each_rev.append(files)
 
-for i in range (0,len(files_for_each_rev)):
-	owner = df['owner'][i]
-	find_best_reviewer(files_for_each_rev[i], file_dictionary, owner)
+# total_empty = 0
+# total_score = 0
+# for i in range (0,len(files_for_each_rev)):
+# 	owner = df['owner'][i]
+# 	rev_recs = find_best_reviewer(files_for_each_rev[i], file_dictionary, owner)
+# 	if len(rev_recs) == 0:
+# 		total_empty+=1
+# 	else:
+# 		best_rec = rev_recs[0]
+# 		score = best_rec[0]
+# 		total_score += score
+# print(total_empty)
+# total_filled =len(file_comment_tuple_list) - total_empty
+# avg_score = total_score/total_filled
+# print(avg_score)

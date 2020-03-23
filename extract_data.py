@@ -174,25 +174,31 @@ def get_all_files_for_commit(commit):
 		all_files = all_files + get_files_for_rev(line[key])
 	return all_files
 
-def find_best_reviewer(revision, file_dictionary):
+def find_best_reviewer(revision, file_dictionary, owner):
 	reviewer_dict = {}
 	for file in revision:
 		if file in file_dictionary.keys():
 			cur_file = file_dictionary[file]
-			print(cur_file)
 			for reviewer in cur_file.keys():
 				if reviewer == 'most_recent_date' or reviewer == 'total_number_of_comments' or reviewer == 'total_number_of_workdays':
 					continue
-				print(reviewer)
 				if reviewer in reviewer_dict.keys():
 					prior_X = reviewer_dict[reviewer]
 					new_X = prior_X + cur_file[reviewer][7]
 					reviewer_dict[reviewer] = new_X
-					print(new_X)
 				else:
 					X_Score = cur_file[reviewer][7]
 					reviewer_dict[reviewer] = X_Score
-					print(X_Score)
+	reviewer_list = []
+	for reviewer in reviewer_dict.keys():
+		if reviewer == owner:
+			print("found owner")
+			continue
+		reviewer_list.append([reviewer_dict[reviewer], reviewer])
+
+	reviewer_list.sort(reverse=True)
+	return reviewer_list
+
 
 df = pd.read_json('test_data_with_comments.json')
 
@@ -212,13 +218,12 @@ file_dictionary = obtain_all_metrics(file_dictionary)
 
 file_dictionary = obtain_X_factor(file_dictionary)
 
-# for key in file_dictionary.keys():
-# 	print(key, "  ", file_dictionary[key])
 
 files_for_each_rev = []
 for line in df['revisions']:
 	files = get_all_files_for_commit(line)
 	files_for_each_rev.append(files)
 
-for line in files_for_each_rev:
-	find_best_reviewer(line, file_dictionary)
+for i in range (0,len(files_for_each_rev)):
+	owner = df['owner'][i]
+	find_best_reviewer(files_for_each_rev[i], file_dictionary, owner)

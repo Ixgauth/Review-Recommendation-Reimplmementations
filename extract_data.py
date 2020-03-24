@@ -106,7 +106,7 @@ def arrange_data_for_package(file_comment_tuple_list):
 	for line in file_comment_tuple_list:
 		file = line[0]
 		file = pathlib.Path(file)
-		new_file = file.parent
+		new_file = str(file.parent)
 		if new_file in file_dictionary.keys():
 			file_dict_entry = file_dictionary[new_file]
 			if line[1] in file_dict_entry:
@@ -193,10 +193,25 @@ def get_files_for_rev(revision):
 		files.append(filename)
 	return files
 
+def get_files_for_rev_package(revision):
+	file_dictionary = revision['files']
+	files = []
+	for filename in file_dictionary.keys():
+		file = pathlib.Path(filename)
+		new_file = file.parent
+		files.append(str(new_file))
+	return files
+
 def get_all_files_for_commit(commit):
 	all_files = []
 	for key in commit.keys():
 		all_files = all_files + get_files_for_rev(line[key])
+	return all_files
+
+def get_all_files_for_commit_package(commit):
+	all_files = []
+	for key in commit.keys():
+		all_files = all_files + get_files_for_rev_package(line[key])
 	return all_files
 
 def find_best_reviewer(revision, file_dictionary, owner):
@@ -259,26 +274,6 @@ for i in range(0, len(df['owner'])):
 			
 print(len(file_comment_tuple_list))
 
-ev = []
-# for line in df['revisions']:
-# 	files = get_all_files_for_commit(line)
-# 	files_for_each_rev.append(files)
-
-# total_empty = 0
-# total_score = 0
-# for i in range (0,len(files_for_each_rev)):
-# 	owner = df['owner'][i]
-# 	rev_recs = find_best_reviewer(files_for_each_rev[i], file_dictionary, owner)
-# 	if len(rev_recs) == 0:
-# 		total_empty+=1
-# 	else:
-# 		best_rec = rev_recs[0]
-# 		score = best_rec[0]
-# 		total_score += score
-# print(total_empty)
-# total_filled =len(file_comment_tuple_list) - total_empty
-# avg_score = total_score/total_filled
-# print(avg_sc
 file_dictionary = arrange_data(file_comment_tuple_list)
 
 file_dictionary = obtain_all_metrics(file_dictionary)
@@ -294,15 +289,18 @@ file_dictionary_package = obtain_X_factor(file_dictionary_package)
 # find_power_users(file_dictionary)
 
 files_for_each_rev = []
+files_for_each_rev_package = []
 for line in df['revisions']:
 	files = get_all_files_for_commit(line)
+	files_package = get_all_files_for_commit_package(line)
 	files_for_each_rev.append(files)
+	files_for_each_rev_package.append(files_package)
 
 total_empty = 0
 total_score = 0
-for i in range (0,len(files_for_each_rev)):
+for i in range (0,len(files_for_each_rev_package)):
 	owner = df['owner'][i]
-	rev_recs = find_best_reviewer(files_for_each_rev[i], file_dictionary_package, owner)
+	rev_recs = find_best_reviewer(files_for_each_rev_package[i], file_dictionary_package, owner)
 	if len(rev_recs) == 0:
 		total_empty+=1
 	else:

@@ -1,5 +1,7 @@
 import json
 import csv
+import os
+import pathlib
 import pandas as pd
 import math
 from pathlib import Path
@@ -97,6 +99,29 @@ def arrange_data(file_comment_tuple_list):
 			author_dict[line[1]] = [[line[2]], line[2]]
 			file_dictionary[file] = author_dict
 	return(file_dictionary)
+
+def arrange_data_for_package(file_comment_tuple_list):
+	file_dictionary = {}
+
+	for line in file_comment_tuple_list:
+		file = line[0]
+		file = pathlib.Path(file)
+		new_file = file.parent
+		if new_file in file_dictionary.keys():
+			file_dict_entry = file_dictionary[new_file]
+			if line[1] in file_dict_entry:
+				current_author = file_dict_entry[line[1]]
+				current_author[0].append(line[2])
+				if line[2] > current_author[1]:
+					current_author[1] = line[2]
+			else:
+				file_dict_entry[line[1]] = [[line[2]], line[2]]
+		else:
+			author_dict = {}
+			author_dict[line[1]] = [[line[2]], line[2]]
+			file_dictionary[new_file] = author_dict
+	return(file_dictionary)
+
 
 def obtain_all_metrics(file_dictionary):
 	for key in file_dictionary.keys():
@@ -234,19 +259,10 @@ for i in range(0, len(df['owner'])):
 			
 print(len(file_comment_tuple_list))
 
-
-file_dictionary = arrange_data(file_comment_tuple_list)
-
-file_dictionary = obtain_all_metrics(file_dictionary)
-
-file_dictionary = obtain_X_factor(file_dictionary)
-
-find_power_users(file_dictionary)
-
-files_for_each_rev = []
-for line in df['revisions']:
-	files = get_all_files_for_commit(line)
-	files_for_each_rev.append(files)
+ev = []
+# for line in df['revisions']:
+# 	files = get_all_files_for_commit(line)
+# 	files_for_each_rev.append(files)
 
 # total_empty = 0
 # total_score = 0
@@ -262,4 +278,38 @@ for line in df['revisions']:
 # print(total_empty)
 # total_filled =len(file_comment_tuple_list) - total_empty
 # avg_score = total_score/total_filled
-# print(avg_score)
+# print(avg_sc
+file_dictionary = arrange_data(file_comment_tuple_list)
+
+file_dictionary = obtain_all_metrics(file_dictionary)
+
+file_dictionary = obtain_X_factor(file_dictionary)
+
+file_dictionary_package = arrange_data_for_package(file_comment_tuple_list)
+
+file_dictionary_package = obtain_all_metrics(file_dictionary_package)
+
+file_dictionary_package = obtain_X_factor(file_dictionary_package)
+
+# find_power_users(file_dictionary)
+
+files_for_each_rev = []
+for line in df['revisions']:
+	files = get_all_files_for_commit(line)
+	files_for_each_rev.append(files)
+
+total_empty = 0
+total_score = 0
+for i in range (0,len(files_for_each_rev)):
+	owner = df['owner'][i]
+	rev_recs = find_best_reviewer(files_for_each_rev[i], file_dictionary_package, owner)
+	if len(rev_recs) == 0:
+		total_empty+=1
+	else:
+		best_rec = rev_recs[0]
+		score = best_rec[0]
+		total_score += score
+print(total_empty)
+total_filled =len(file_comment_tuple_list) - total_empty
+avg_score = total_score/total_filled
+print(avg_score)

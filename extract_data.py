@@ -202,16 +202,19 @@ def get_files_for_rev_package(revision):
 		files.append(str(new_file))
 	return files
 
+def merge_dictionaries(dict1, dict2): 
+    return(dict2.update(dict1))
+
 def get_all_files_for_commit(commit):
-	all_files = []
+	all_files = {}
 	for key in commit.keys():
-		all_files = all_files + get_files_for_rev(line[key])
+		all_files[key] = get_files_for_rev(commit[key])
 	return all_files
 
 def get_all_files_for_commit_package(commit):
-	all_files = []
+	all_files = {}
 	for key in commit.keys():
-		all_files = all_files + get_files_for_rev_package(line[key])
+		all_files[key] = get_files_for_rev_package(commit[key])
 	return all_files
 
 def find_best_reviewer(revision, file_dictionary, owner):
@@ -263,7 +266,79 @@ def find_power_users(file_dictionary):
 	for i in range(0, 10):
 		print(reviewer_list[i])
 
-df = pd.read_json('test_data_with_comments.json')
+def find_best_reviewer_always(df, file_comment_tuple_list):
+	file_dictionary = arrange_data(file_comment_tuple_list)
+
+	file_dictionary = obtain_all_metrics(file_dictionary)
+
+	file_dictionary = obtain_X_factor(file_dictionary)
+
+	file_dictionary_package = arrange_data_for_package(file_comment_tuple_list)
+
+	file_dictionary_package = obtain_all_metrics(file_dictionary_package)
+
+	file_dictionary_package = obtain_X_factor(file_dictionary_package)
+
+	files_for_each_rev = []
+	files_for_each_rev_package = []
+	for line in df['revisions']:
+		files_for_each_rev.append(get_all_files_for_commit(line))
+		files_for_each_rev_package.append(get_all_files_for_commit_package(line))
+	
+	revs_with_files_dict = {}
+	revs_with_files_dict_package = {}
+
+	for line in files_for_each_rev:
+		revs_with_files_dict.update(line)
+
+	for line in files_for_each_rev_package:
+		revs_with_files_dict_package.update(line)
+
+	total_empty = 0
+	total_score = 0
+
+	top_rev_rec = {}
+	top_rev_rec_package = {}
+
+	for key in revs_with_files_dict.keys():
+		owner = df['owner'][i]
+		rev_recs = find_best_reviewer(revs_with_files_dict[key], file_dictionary, owner)
+		if len(rev_recs) == 0:
+			total_empty+=1
+		else:
+			top_rev_rec[key] = rev_recs[0]
+			best_rec = rev_recs[0]
+			score = best_rec[0]
+			total_score += score
+	print(total_empty)
+	total_filled =len(revs_with_files_dict) - total_empty
+	avg_score = total_score/total_filled
+	print(avg_score)
+	print(top_rev_rec)
+
+
+	# for i in range (0,len(files_for_each_rev_package)):
+	# 	owner = df['owner'][i]
+	# 	rev_recs = find_best_reviewer(files_for_each_rev[i], file_dictionary, owner)
+	# 	rev_recs_package = find_best_reviewer(files_for_each_rev_package[i], file_dictionary_package, owner)
+	# 	if len(rev_recs) == 0:
+	# 		total_empty+=1
+	# 	else:
+	# 		top_rev_rec.append(rev_recs[0])
+	# 		best_rec = rev_recs[0]
+	# 		score = best_rec[0]
+	# 		total_score += score
+	# 	if len(rev_recs_package) > 0:
+	# 		top_rev_rec_package.append(rev_recs_package[0])
+
+	# print(total_empty)
+	# total_filled =len(file_comment_tuple_list) - total_empty
+	# avg_score = total_score/total_filled
+	# print(avg_score)
+
+
+
+df = pd.read_json('test_data.json')
 
 file_comment_tuple_list = []
 
@@ -272,42 +347,4 @@ for i in range(0, len(df['owner'])):
 	if isinstance(comments, dict):
 		file_comment_tuple_list = file_comment_tuple_list + get_comment_tuples(df['owner'][i]["_account_id"], comments)
 			
-print(len(file_comment_tuple_list))
-
-file_dictionary = arrange_data(file_comment_tuple_list)
-
-file_dictionary = obtain_all_metrics(file_dictionary)
-
-file_dictionary = obtain_X_factor(file_dictionary)
-
-file_dictionary_package = arrange_data_for_package(file_comment_tuple_list)
-
-file_dictionary_package = obtain_all_metrics(file_dictionary_package)
-
-file_dictionary_package = obtain_X_factor(file_dictionary_package)
-
-# find_power_users(file_dictionary)
-
-files_for_each_rev = []
-files_for_each_rev_package = []
-for line in df['revisions']:
-	files = get_all_files_for_commit(line)
-	files_package = get_all_files_for_commit_package(line)
-	files_for_each_rev.append(files)
-	files_for_each_rev_package.append(files_package)
-
-total_empty = 0
-total_score = 0
-for i in range (0,len(files_for_each_rev_package)):
-	owner = df['owner'][i]
-	rev_recs = find_best_reviewer(files_for_each_rev_package[i], file_dictionary_package, owner)
-	if len(rev_recs) == 0:
-		total_empty+=1
-	else:
-		best_rec = rev_recs[0]
-		score = best_rec[0]
-		total_score += score
-print(total_empty)
-total_filled =len(file_comment_tuple_list) - total_empty
-avg_score = total_score/total_filled
-print(avg_score)
+find_best_reviewer_always(df, file_comment_tuple_list)

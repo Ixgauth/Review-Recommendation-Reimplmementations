@@ -304,7 +304,14 @@ def find_best_reviewer_always(df, file_comment_tuple_list):
 		owner = df['owner'][i]
 		rev_recs = find_best_reviewer(revs_with_files_dict[key], file_dictionary, owner)
 		if len(rev_recs) == 0:
-			total_empty+=1
+			rev_recs = find_best_reviewer(revs_with_files_dict_package[key], file_dictionary_package, owner)
+			if len(rev_recs) == 0:
+				total_empty+=1
+			else:
+				top_rev_rec[key] = rev_recs[0]
+				best_rec = rev_recs[0]
+				score = best_rec[0]
+				total_score += score
 		else:
 			top_rev_rec[key] = rev_recs[0]
 			best_rec = rev_recs[0]
@@ -313,8 +320,9 @@ def find_best_reviewer_always(df, file_comment_tuple_list):
 	print(total_empty)
 	total_filled =len(revs_with_files_dict) - total_empty
 	avg_score = total_score/total_filled
+	print(total_filled)
 	print(avg_score)
-	print(top_rev_rec)
+	# print(top_rev_rec)
 
 
 	# for i in range (0,len(files_for_each_rev_package)):
@@ -338,7 +346,7 @@ def find_best_reviewer_always(df, file_comment_tuple_list):
 
 
 
-df = pd.read_json('test_data.json')
+df = pd.read_json('test_data_with_comments.json')
 
 file_comment_tuple_list = []
 

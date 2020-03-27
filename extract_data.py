@@ -127,7 +127,7 @@ def arrange_data_system(file_comment_tuple_list):
 
 	for line in file_comment_tuple_list:
 		file = line[0]
-		topdir = filename.split('/')[0]
+		topdir = file.split('/')[0]
 		if topdir in file_dictionary.keys():
 			file_dict_entry = file_dictionary[topdir]
 			if line[1] in file_dict_entry:
@@ -221,6 +221,14 @@ def get_files_for_rev_package(revision):
 		files.append(str(new_file))
 	return files
 
+def get_files_for_rev_system(revision):
+	file_dictionary = revision['files']
+	files = []
+	for filename in file_dictionary.keys():
+		topdir = filename.split('/')[0]
+		files.append(topdir)
+	return files
+
 def merge_dictionaries(dict1, dict2): 
     return(dict2.update(dict1))
 
@@ -234,6 +242,12 @@ def get_all_files_for_commit_package(commit):
 	all_files = {}
 	for key in commit.keys():
 		all_files[key] = get_files_for_rev_package(commit[key])
+	return all_files
+
+def get_all_files_for_commit_system(commit):
+	all_files = {}
+	for key in commit.keys():
+		all_files[key] = get_files_for_rev_system(commit[key])
 	return all_files
 
 def find_best_reviewer(revision, file_dictionary, owner):
@@ -298,20 +312,33 @@ def find_best_reviewer_always(df, file_comment_tuple_list):
 
 	file_dictionary_package = obtain_X_factor(file_dictionary_package)
 
+	file_dictionary_system = arrange_data_system(file_comment_tuple_list)
+
+	file_dictionary_system = obtain_all_metrics(file_dictionary_system)
+
+	file_dictionary_system = obtain_X_factor(file_dictionary_system)
+
 	files_for_each_rev = []
 	files_for_each_rev_package = []
+	files_for_each_rev_system = []
 	for line in df['revisions']:
 		files_for_each_rev.append(get_all_files_for_commit(line))
 		files_for_each_rev_package.append(get_all_files_for_commit_package(line))
+		files_for_each_rev_system.append(get_all_files_for_commit_system(line))
 	
 	revs_with_files_dict = {}
 	revs_with_files_dict_package = {}
+	revs_with_files_dict_system = {}
 
 	for line in files_for_each_rev:
 		revs_with_files_dict.update(line)
 
 	for line in files_for_each_rev_package:
 		revs_with_files_dict_package.update(line)
+
+	for line in files_for_each_rev_system:
+		revs_with_files_dict_system.update(line)
+
 
 	total_empty = 0
 	total_score = 0
@@ -325,7 +352,14 @@ def find_best_reviewer_always(df, file_comment_tuple_list):
 		if len(rev_recs) == 0:
 			rev_recs = find_best_reviewer(revs_with_files_dict_package[key], file_dictionary_package, owner)
 			if len(rev_recs) == 0:
-				total_empty+=1
+				rev_recs = find_best_reviewer(revs_with_files_dict_system[key], file_dictionary_system, owner)
+				if len(rev_recs) == 0:
+					total_empty+=1
+				else:
+					top_rev_rec[key] = rev_recs[0]
+					best_rec = rev_recs[0]
+					score = best_rec[0]
+					total_score += score
 			else:
 				top_rev_rec[key] = rev_recs[0]
 				best_rec = rev_recs[0]
@@ -343,7 +377,7 @@ def find_best_reviewer_always(df, file_comment_tuple_list):
 	print(avg_score)
 
 
-df = pd.read_json('test_data.json')
+df = pd.read_json('test_data_with_comments.json')
 
 file_comment_tuple_list = []
 

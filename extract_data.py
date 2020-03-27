@@ -122,6 +122,26 @@ def arrange_data_for_package(file_comment_tuple_list):
 			file_dictionary[new_file] = author_dict
 	return(file_dictionary)
 
+def arrange_data_system(file_comment_tuple_list):
+	file_dictionary = {}
+
+	for line in file_comment_tuple_list:
+		file = line[0]
+		topdir = filename.split('/')[0]
+		if topdir in file_dictionary.keys():
+			file_dict_entry = file_dictionary[topdir]
+			if line[1] in file_dict_entry:
+				current_author = file_dict_entry[line[1]]
+				current_author[0].append(line[2])
+				if line[2] > current_author[1]:
+					current_author[1] = line[2]
+			else:
+				file_dict_entry[line[1]] = [[line[2]], line[2]]
+		else:
+			author_dict = {}
+			author_dict[line[1]] = [[line[2]], line[2]]
+			file_dictionary[topdir] = author_dict
+	return(file_dictionary)
 
 def obtain_all_metrics(file_dictionary):
 	for key in file_dictionary.keys():
@@ -138,7 +158,6 @@ def obtain_all_metrics(file_dictionary):
 		file_dictionary[key]['total_number_of_comments'] = number_of_comments
 		file_dictionary[key]['total_number_of_workdays'] = number_of_workdays
 
-		# print(file_dictionary[key])
 	return file_dictionary
 
 def obtain_C_score(author, total_number_of_comments):
@@ -322,31 +341,9 @@ def find_best_reviewer_always(df, file_comment_tuple_list):
 	avg_score = total_score/total_filled
 	print(total_filled)
 	print(avg_score)
-	# print(top_rev_rec)
 
 
-	# for i in range (0,len(files_for_each_rev_package)):
-	# 	owner = df['owner'][i]
-	# 	rev_recs = find_best_reviewer(files_for_each_rev[i], file_dictionary, owner)
-	# 	rev_recs_package = find_best_reviewer(files_for_each_rev_package[i], file_dictionary_package, owner)
-	# 	if len(rev_recs) == 0:
-	# 		total_empty+=1
-	# 	else:
-	# 		top_rev_rec.append(rev_recs[0])
-	# 		best_rec = rev_recs[0]
-	# 		score = best_rec[0]
-	# 		total_score += score
-	# 	if len(rev_recs_package) > 0:
-	# 		top_rev_rec_package.append(rev_recs_package[0])
-
-	# print(total_empty)
-	# total_filled =len(file_comment_tuple_list) - total_empty
-	# avg_score = total_score/total_filled
-	# print(avg_score)
-
-
-
-df = pd.read_json('test_data_with_comments.json')
+df = pd.read_json('test_data.json')
 
 file_comment_tuple_list = []
 

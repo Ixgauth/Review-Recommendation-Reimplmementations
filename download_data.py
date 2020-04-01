@@ -8,8 +8,8 @@ def get_dates(start_date, end_date):
 	for n in range(int ((end_date - start_date).days)):
 		yield start_date + timedelta(n)
 
-start_date = date(2019, 1, 1)
-end_date = date(2019, 1, 4)
+start_date = date(2018, 1, 1)
+end_date = date(2020, 1, 1)
 json_list = []
 for single_date in get_dates(start_date, end_date):
 	print(single_date.strftime("%Y-%m-%d"))
@@ -26,8 +26,8 @@ for single_date in get_dates(start_date, end_date):
 	else:
 		print(resp.status_code)
 
-df = pd.DataFrame(json_list)
-df.to_csv('test_data.csv', index = False, header=True)
+# df = pd.DataFrame(json_list)
+# df.to_csv('test_data.csv', index = False, header=True)
 
 for line in json_list:
 	change_id = line["change_id"]
@@ -37,8 +37,8 @@ for line in json_list:
 		line["comments"] = json.loads(resp.content.decode("utf-8").replace(")]}'",''))
 
 
-new_df = pd.DataFrame(json_list)
-new_df.to_csv('test_data_with_comments.csv', index = False, header = True)
+# new_df = pd.DataFrame(json_list)
+# new_df.to_csv('test_data_with_comments.csv', index = False, header = True)
 
 outfile = open("test_data_with_comments.json", "w")
 outfile.write(json.dumps(json_list))

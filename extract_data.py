@@ -2,6 +2,7 @@ import json
 import csv
 import os
 import pathlib
+import requests
 import pandas as pd
 import math
 from pathlib import Path
@@ -376,14 +377,38 @@ def find_best_reviewer_always(df, file_comment_tuple_list):
 	print(total_filled)
 	print(avg_score)
 
+def find_last_comments(df, number_of_comments):
+	number_obtained = 0
+	while number_obtained < number_of_comments:
+		final_line = df.tail(1)
+		line_labels = final_line['labels']
+		for line in line_labels:
+			reviewer = line['Code-Review']
+			if len(reviewer) > 0:
+				if 'approved' in reviewer.keys():
+					account_id = reviewer['approved']['_account_id']
+					baseURL = "https://gerrit-review.googlesource.com/accounts/" + str(account_id)
+					print(baseURL)
+					resp = requests.get(baseURL)
+					print(resp.status_code)
+					if resp.status_code == 200:
+						print("it worked")
+						loaded = json.loads(resp.content.decode("utf-8").replace(")]}'",''))
+						print(loaded)
+				number_obtained+=1
+
+		df.drop(df.tail(1).index,inplace=True)
 
 df = pd.read_json('test_data_with_comments.json')
 
-file_comment_tuple_list = []
+# file_comment_tuple_list = []
 
-for i in range(0, len(df['owner'])):
-	comments = df['comments'][i]
-	if isinstance(comments, dict):
-		file_comment_tuple_list = file_comment_tuple_list + get_comment_tuples(df['owner'][i]["_account_id"], comments)
+# for i in range(0, len(df['owner'])):
+# 	comments = df['comments'][i]
+# 	if isinstance(comments, dict):
+# 		file_comment_tuple_list = file_comment_tuple_list + get_comment_tuples(df['owner'][i]["_account_id"], comments)
 			
-find_best_reviewer_always(df, file_comment_tuple_list)
+# find_best_reviewer_always(df, file_comment_tuple_list)
+
+
+df_tail = find_last_comments(df, 20)

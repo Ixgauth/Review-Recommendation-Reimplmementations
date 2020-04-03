@@ -390,6 +390,18 @@ def find_final_change_time(test_df):
 			earliest_time = change_time_obj
 	return(earliest_time)
 
+def get_base_tuple_list(df, earliest_time):
+	file_comment_tuple_list = []
+
+	for i in range(0, len(df['owner'])):
+		change_time = df['created'][i]
+		change_time = change_time.replace('.000000000', '')
+		change_time_obj = datetime.strptime(change_time, '%Y-%m-%d %H:%M:%S')
+		if earliest_time > change_time_obj:
+			comments = df['comments'][i]
+			if isinstance(comments, dict):
+				file_comment_tuple_list = file_comment_tuple_list + get_comment_tuples(df['owner'][i]["_account_id"], comments)
+	print(len(file_comment_tuple_list))
 
 def find_best_for_specific_change(df, change):
 	time_created = change['created']
@@ -446,6 +458,7 @@ def find_last_comments(df, number_of_comments):
 
 
 df = pd.read_json('test_data_with_comments.json')
+print(len(df))
 
 # file_comment_tuple_list = []
 
@@ -457,9 +470,14 @@ df = pd.read_json('test_data_with_comments.json')
 # find_best_reviewer_always(df, file_comment_tuple_list)
 
 
-df_tail = find_last_comments(df, 20)
+df_tail = find_last_comments(df.copy(), 20)
 
-# for i, j in df_tail.iterrows(): 
-#     find_best_for_specific_change(df, j)
+print(len(df))
 
 earliest_change = find_final_change_time(df_tail)
+
+get_base_tuple_list(df, earliest_change)
+
+
+for i, j in df_tail.iterrows(): 
+    find_best_for_specific_change(df, j)

@@ -379,6 +379,11 @@ def find_best_reviewer_always(df, file_comment_tuple_list):
 
 def find_last_comments(df, number_of_comments):
 	number_obtained = 0
+
+	list_of_reviewers = []
+
+	list_of_lines = []
+
 	while number_obtained < number_of_comments:
 		final_line = df.tail(1)
 		line_labels = final_line['labels']
@@ -388,16 +393,25 @@ def find_last_comments(df, number_of_comments):
 				if 'approved' in reviewer.keys():
 					account_id = reviewer['approved']['_account_id']
 					baseURL = "https://gerrit-review.googlesource.com/accounts/" + str(account_id)
-					print(baseURL)
 					resp = requests.get(baseURL)
-					print(resp.status_code)
 					if resp.status_code == 200:
-						print("it worked")
 						loaded = json.loads(resp.content.decode("utf-8").replace(")]}'",''))
-						print(loaded)
-				number_obtained+=1
+						name = loaded['name']
+						number_obtained+=1
+						list_of_reviewers.append(name)
+						df_line = final_line.values.tolist()
+						list_of_lines.append(df_line)
 
 		df.drop(df.tail(1).index,inplace=True)
+	final_list = []
+	for line in list_of_lines:
+		final_list.append(line[0])
+
+	df_test = pd.DataFrame(final_list, columns = df.columns)
+
+	df_test['name_of_reviewer'] = list_of_reviewers
+	return(df_test)
+
 
 df = pd.read_json('test_data_with_comments.json')
 

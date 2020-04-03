@@ -393,6 +393,8 @@ def find_final_change_time(test_df):
 def get_base_tuple_list(df, earliest_time):
 	file_comment_tuple_list = []
 
+	changes_after_base = []
+
 	for i in range(0, len(df['owner'])):
 		change_time = df['created'][i]
 		change_time = change_time.replace('.000000000', '')
@@ -401,7 +403,18 @@ def get_base_tuple_list(df, earliest_time):
 			comments = df['comments'][i]
 			if isinstance(comments, dict):
 				file_comment_tuple_list = file_comment_tuple_list + get_comment_tuples(df['owner'][i]["_account_id"], comments)
-	print(len(file_comment_tuple_list))
+		else:
+			current_row = df.iloc[[i]]
+			df_line = current_row.values.tolist()
+			changes_after_base.append(df_line)
+
+	final_list = []
+	for line in changes_after_base:
+		final_list.append(line[0])
+
+	df_extra = pd.DataFrame(final_list, columns = df.columns)
+
+	return file_comment_tuple_list, df_extra 
 
 def find_best_for_specific_change(df, change):
 	time_created = change['created']

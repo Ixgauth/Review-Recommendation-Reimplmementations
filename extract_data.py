@@ -377,6 +377,24 @@ def find_best_reviewer_always(df, file_comment_tuple_list):
 	print(total_filled)
 	print(avg_score)
 
+def find_best_for_specific_change(df, change):
+	time_created = change['created']
+	time_created = time_created.replace('.000000000', '')
+	date_time_obj = datetime.strptime(time_created, '%Y-%m-%d %H:%M:%S')
+
+	print(date_time_obj)
+	file_comment_tuple_list = []
+
+	for i in range(0, len(df['owner'])):
+		change_time = df['created'][i]
+		change_time = change_time.replace('.000000000', '')
+		change_time_obj = datetime.strptime(change_time, '%Y-%m-%d %H:%M:%S')
+		if date_time_obj > change_time_obj:
+			comments = df['comments'][i]
+			if isinstance(comments, dict):
+				file_comment_tuple_list = file_comment_tuple_list + get_comment_tuples(df['owner'][i]["_account_id"], comments)
+	print(len(file_comment_tuple_list))
+
 def find_last_comments(df, number_of_comments):
 	number_obtained = 0
 
@@ -425,4 +443,7 @@ df = pd.read_json('test_data_with_comments.json')
 # find_best_reviewer_always(df, file_comment_tuple_list)
 
 
-df_tail = find_last_comments(df, 20)
+df_tail = find_last_comments(df, 2)
+
+for i, j in df_tail.iterrows(): 
+    find_best_for_specific_change(df, j)

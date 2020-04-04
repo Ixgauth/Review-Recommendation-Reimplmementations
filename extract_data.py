@@ -489,9 +489,11 @@ def find_best_for_specific_change(file_comment_tuple_list, df_extra, change):
 		for line in best_rec:
 			if actual_reviewer in line:
 				print('YES')
+				return 1
 				printed = True
 		if printed == False:
 			print('NO')
+			return 0
 
 def find_best_for_specific_change_longer(df, change):
 	time_created = change['created']
@@ -560,15 +562,18 @@ def find_best_for_specific_change_longer(df, change):
 		else:
 			best_rec = rev_recs[:5]
 
+	total_found = 0
 	if len(best_rec) != 0:
 		actual_reviewer = change['name_of_reviewer']
 		printed = False
 		for line in best_rec:
 			if actual_reviewer in line:
 				print('YES')
+				total_found+=1
 				printed = True
 		if printed == False:
 			print('NO')
+	print(total_found)
 	
 def find_last_comments(df, number_of_comments):
 	number_obtained = 0
@@ -626,7 +631,12 @@ earliest_change = find_final_change_time(df_tail)
 
 base_tuple_list, df_extra = get_base_tuple_list(df, earliest_change)
 
+total_found = 0
+
 for i, j in df_tail.iterrows(): 
-    find_best_for_specific_change(base_tuple_list, df_extra, j)
+    val = find_best_for_specific_change(base_tuple_list, df_extra, j)
+    if val ==1:
+    	total_found+=1
+print(total_found)
     # find_best_for_specific_change_longer(df, j)
 

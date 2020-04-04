@@ -430,7 +430,7 @@ def find_best_for_specific_change(file_comment_tuple_list, df_extra, change):
 		change_time = change_time.replace('.000000000', '')
 		change_time_obj = datetime.strptime(change_time, '%Y-%m-%d %H:%M:%S')
 		if date_time_obj > change_time_obj:
-			comments = df['comments'][i]
+			comments = df_extra['comments'][i]
 			if isinstance(comments, dict):
 				file_comment_tuple_list = file_comment_tuple_list + get_comment_tuples(df['owner'][i]["_account_id"], comments)
 
@@ -493,7 +493,82 @@ def find_best_for_specific_change(file_comment_tuple_list, df_extra, change):
 		if printed == False:
 			print('NO')
 
+def find_best_for_specific_change_longer(df, change):
+	time_created = change['created']
+	time_created = time_created.replace('.000000000', '')
+	date_time_obj = datetime.strptime(time_created, '%Y-%m-%d %H:%M:%S')
 
+	print(date_time_obj)
+
+	file_comment_tuple_list = []
+
+	for i in range(0, len(df['owner'])):
+		change_time = df_extra['created'][i]
+		change_time = change_time.replace('.000000000', '')
+		change_time_obj = datetime.strptime(change_time, '%Y-%m-%d %H:%M:%S')
+		if date_time_obj > change_time_obj:
+			comments = df['comments'][i]
+			if isinstance(comments, dict):
+				file_comment_tuple_list = file_comment_tuple_list + get_comment_tuples(df['owner'][i]["_account_id"], comments)
+
+	file_dictionary = arrange_data(file_comment_tuple_list)
+
+	file_dictionary = obtain_all_metrics(file_dictionary)
+
+	file_dictionary = obtain_X_factor(file_dictionary)
+
+	print(len(file_comment_tuple_list))
+	print(len(file_dictionary))
+	files_in_change = get_all_files_for_commit(change['revisions'])
+
+	owner = change['owner']
+
+	best_rec = []
+
+	for key in files_in_change.keys():
+		rev_recs = find_best_reviewer(files_in_change[key], file_dictionary, owner)
+		if len(rev_recs) == 0:
+			file_dictionary_package = arrange_data_for_package(file_comment_tuple_list)
+
+			file_dictionary_package = obtain_all_metrics(file_dictionary_package)
+
+			file_dictionary_package = obtain_X_factor(file_dictionary_package)
+
+			files_in_change_package = get_all_files_for_commit_package(change['revisions'])
+
+			rev_recs = find_best_reviewer(files_in_change_package[key], file_dictionary_package, owner)
+
+			if len(rev_recs) == 0:
+				file_dictionary_system = arrange_data_system(file_comment_tuple_list)
+
+				file_dictionary_system = obtain_all_metrics(file_dictionary_system)
+
+				file_dictionary_system = obtain_X_factor(file_dictionary_system)
+
+				files_in_change_system = get_all_files_for_commit_system(change['revisions'])
+
+				rev_recs = find_best_reviewer(files_in_change_system[key], file_dictionary_system, owner)
+
+				if len(rev_recs) == 0:
+					print("nothing found")
+
+				else:
+					best_rec = rev_recs[:5]
+
+			else:
+				best_rec = rev_recs[:5]
+		else:
+			best_rec = rev_recs[:5]
+
+	if len(best_rec) != 0:
+		actual_reviewer = change['name_of_reviewer']
+		printed = False
+		for line in best_rec:
+			if actual_reviewer in line:
+				print('YES')
+				printed = True
+		if printed == False:
+			print('NO')
 	
 def find_last_comments(df, number_of_comments):
 	number_obtained = 0
@@ -545,7 +620,7 @@ file_comment_tuple_list = []
 # find_best_reviewer_always(df, file_comment_tuple_list)
 
 
-df_tail = find_last_comments(df.copy(), 20)
+df_tail = find_last_comments(df.copy(), 200)
 
 earliest_change = find_final_change_time(df_tail)
 
@@ -553,4 +628,5 @@ base_tuple_list, df_extra = get_base_tuple_list(df, earliest_change)
 
 for i, j in df_tail.iterrows(): 
     find_best_for_specific_change(base_tuple_list, df_extra, j)
+    # find_best_for_specific_change_longer(df, j)
 

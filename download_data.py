@@ -29,12 +29,38 @@ for single_date in get_dates(start_date, end_date):
 # df = pd.DataFrame(json_list)
 # df.to_csv('test_data.csv', index = False, header=True)
 
+# outfile = open("some_crap.json", "w")
+
+
 for line in json_list:
 	change_id = line["change_id"]
+	strng = "CHANGE ID: " + change_id
 	baseURL = f"https://gerrit-review.googlesource.com/changes/{change_id}/comments"
 	resp = requests.get(baseURL)
 	if(resp.status_code == 200):
 		line["comments"] = json.loads(resp.content.decode("utf-8").replace(")]}'",''))
+	change_id = line["change_id"]
+	baseURL = f"https://gerrit-review.googlesource.com/changes/{change_id}/detail"
+	resp = requests.get(baseURL)
+	if(resp.status_code == 200):
+		line['details'] = json.loads(resp.content.decode("utf-8").replace(")]}'",''))
+
+		reviewers_qued = line['details']['reviewers']
+		reviewers_list = reviewers_qued['REVIEWER']
+		account_id_list = []
+		reviewer_name_list = []
+		owner_id = line['details']['owner']['_account_id']
+
+		for lne in reviewers_list:
+			if lne['_account_id'] == owner_id:
+				continue
+			if lne['_account_id'] == 1022687:
+				continue
+
+			account_id_list.append(lne['_account_id'])
+			reviewer_name_list.append(lne['name'])
+		line['reviewers_account_id'] = account_id_list
+		line['reviewers_name_list'] = reviewer_name_list
 
 
 # new_df = pd.DataFrame(json_list)

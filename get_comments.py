@@ -34,25 +34,60 @@ import requests
 # outfile = open("test_data_with_comments.json", "w")
 # outfile.write(json.dumps(data))
 
-df = pd.read_json('test_data_with_comments.json')
+# df = pd.read_json('test_data_with_comments.json')
 
-df['details'] = ""
-df['reviewers_account_id'] = ""
-df['reviewers_name_list'] = ""
+# df['details'] = ""
+# df['reviewers_account_id'] = ""
+# df['reviewers_name_list'] = ""
 
-for i in range(0, len(df)):
-	change_id = df["change_id"][i]
+# for i in range(0, len(df)):
+# 	change_id = df["change_id"][i]
+# 	baseURL = f"https://gerrit-review.googlesource.com/changes/{change_id}/detail"
+# 	resp = requests.get(baseURL)
+# 	if(resp.status_code == 200):
+# 		df['details'][i] = json.loads(resp.content.decode("utf-8").replace(")]}'",''))
+
+# 		reviewers_qued = df['details'][i]['reviewers']
+# 		if 'REVIEWER' in reviewers_qued.keys():
+# 			reviewers_list = reviewers_qued['REVIEWER']
+# 			account_id_list = []
+# 			reviewer_name_list = []
+# 			owner_id = df['details'][i]['owner']['_account_id']
+
+# 			for lne in reviewers_list:
+# 				if lne['_account_id'] == owner_id:
+# 					continue
+# 				if lne['_account_id'] == 1022687:
+# 					continue
+
+# 				account_id_list.append(lne['_account_id'])
+# 				reviewer_name_list.append(lne['name'])
+# 			df['reviewers_account_id'][i] = account_id_list
+# 			df['reviewers_name_list'][i] = reviewer_name_list
+
+# df.to_json(r'test_data_with_reviewers.json')
+
+with open('test_data_with_comments.json') as json_file:
+	data = json.load(json_file)
+
+
+i = 0
+for line in data:
+	if i % 200 == 0:
+		print(i)
+	i+=1
+	change_id = line["change_id"]
 	baseURL = f"https://gerrit-review.googlesource.com/changes/{change_id}/detail"
 	resp = requests.get(baseURL)
 	if(resp.status_code == 200):
-		df['details'][i] = json.loads(resp.content.decode("utf-8").replace(")]}'",''))
+		line['details'] = json.loads(resp.content.decode("utf-8").replace(")]}'",''))
 
-		reviewers_qued = df['details'][i]['reviewers']
+		reviewers_qued = line['details']['reviewers']
 		if 'REVIEWER' in reviewers_qued.keys():
 			reviewers_list = reviewers_qued['REVIEWER']
 			account_id_list = []
 			reviewer_name_list = []
-			owner_id = df['details'][i]['owner']['_account_id']
+			owner_id = line['details']['owner']['_account_id']
 
 			for lne in reviewers_list:
 				if lne['_account_id'] == owner_id:
@@ -62,7 +97,9 @@ for i in range(0, len(df)):
 
 				account_id_list.append(lne['_account_id'])
 				reviewer_name_list.append(lne['name'])
-			df['reviewers_account_id'][i] = account_id_list
-			df['reviewers_name_list'][i] = reviewer_name_list
+			line['reviewers_account_id'] = account_id_list
+			line['reviewers_name_list'] = reviewer_name_list
 
-df.to_json(r'test_data_with_reviewers.json')
+
+outfile = open("test_data_with_reviewers.json", "w")
+outfile.write(json.dumps(data))	

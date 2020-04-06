@@ -442,48 +442,63 @@ def find_best_for_specific_change(file_comment_tuple_list, df_extra, change):
 
 	print(len(file_comment_tuple_list))
 	print(len(file_dictionary))
+	list_of_files = []
 	files_in_change = get_all_files_for_commit(change['revisions'])
+
+	for key in files_in_change.keys():
+		list_of_files = list_of_files + files_in_change[key]
 
 	owner = change['owner']
 
 	best_rec = []
 
-	for key in files_in_change.keys():
-		rev_recs = find_best_reviewer(files_in_change[key], file_dictionary, owner)
+	rev_recs = find_best_reviewer(list_of_files, file_dictionary, owner)
+	if len(rev_recs) == 0:
+		print('nothing found at review level')
+		file_dictionary_package = arrange_data_for_package(file_comment_tuple_list)
+
+		file_dictionary_package = obtain_all_metrics(file_dictionary_package)
+
+		file_dictionary_package = obtain_X_factor(file_dictionary_package)
+
+		files_in_change_package = get_all_files_for_commit_package(change['revisions'])
+
+		list_of_files_package = []
+
+		for package_key in files_in_change_package.keys():
+			list_of_files_package = list_of_files_package + files_in_change_package[package_key]
+
+		rev_recs = find_best_reviewer(list_of_files_package, file_dictionary_package, owner)
+
 		if len(rev_recs) == 0:
-			file_dictionary_package = arrange_data_for_package(file_comment_tuple_list)
+			print('nothing found at package')
+			file_dictionary_system = arrange_data_system(file_comment_tuple_list)
 
-			file_dictionary_package = obtain_all_metrics(file_dictionary_package)
+			file_dictionary_system = obtain_all_metrics(file_dictionary_system)
 
-			file_dictionary_package = obtain_X_factor(file_dictionary_package)
+			file_dictionary_system = obtain_X_factor(file_dictionary_system)
 
-			files_in_change_package = get_all_files_for_commit_package(change['revisions'])
+			files_in_change_system = get_all_files_for_commit_system(change['revisions'])
 
-			rev_recs = find_best_reviewer(files_in_change_package[key], file_dictionary_package, owner)
+			list_of_files_system = []
+
+			for system_key in files_in_change_system.keys():
+				list_of_files_system = list_of_files_system + files_in_change_system[system_key]
+
+			rev_recs = find_best_reviewer(list_of_files_system, file_dictionary_system, owner)
 
 			if len(rev_recs) == 0:
-				file_dictionary_system = arrange_data_system(file_comment_tuple_list)
-
-				file_dictionary_system = obtain_all_metrics(file_dictionary_system)
-
-				file_dictionary_system = obtain_X_factor(file_dictionary_system)
-
-				files_in_change_system = get_all_files_for_commit_system(change['revisions'])
-
-				rev_recs = find_best_reviewer(files_in_change_system[key], file_dictionary_system, owner)
-
-				if len(rev_recs) == 0:
-					print("nothing found")
-					print(files_in_change)
-					return -1
-
-				else:
-					best_rec = rev_recs[:5]
+				print("nothing found")
+				print(files_in_change)
+				return -1
 
 			else:
 				best_rec = rev_recs[:5]
+
 		else:
 			best_rec = rev_recs[:5]
+	else:
+		best_rec = rev_recs[:5]
 
 	if len(best_rec) != 0:
 		actual_reviewer_list = change['reviewers_name_list']

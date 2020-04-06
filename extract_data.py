@@ -300,12 +300,25 @@ def find_power_users(file_dictionary):
 	for i in range(0, 10):
 		print(reviewer_list[i])
 
+def find_overlap(best_rec_line, actuals_line, m_value):
+	best_rec_trimmed = best_rec_line[:m_value]
+
+	print(best_rec_trimmed)
+
+	overlap = list(set(best_rec_trimmed) & set(actuals_line))
+
+	number_overlap = len(overlap)
+
+	print(number_overlap)
+
+# def find_precision_value(list_of_best_recs, list_of_actuals, m_value):
+# 	for
+
 def get_all_performance_metrics(list_of_best_recs, list_of_actuals):
-	longest = 0
-	for line in list_of_actuals:
-		if len(line) > longest:
-			longest = len(line)
-	print(longest)
+	for i in range(0, len(list_of_best_recs)):
+		find_overlap(list_of_best_recs[i], list_of_actuals[i], 5)
+
+
 
 def find_best_reviewer_always(df, file_comment_tuple_list):
 	file_dictionary = arrange_data(file_comment_tuple_list)
@@ -505,8 +518,11 @@ def find_best_for_specific_change(file_comment_tuple_list, df_extra, change):
 	else:
 		best_rec = rev_recs[:5]
 
+	best_rec_no_value = []
+	for rec in best_rec:
+		best_rec_no_value.append(rec[1])
 	actual_reviewer_list = change['reviewers_name_list']
-	return(best_rec, actual_reviewer_list)
+	return(best_rec_no_value, actual_reviewer_list)
 
 
 		# print(actual_reviewer_list)
@@ -597,30 +613,18 @@ file_comment_tuple_list = []
 # find_best_reviewer_always(df, file_comment_tuple_list)
 
 
-# df_tail = find_last_comments(df.copy(), 100)
+df_tail = find_last_comments(df.copy(), 5)
 
-# earliest_change = find_final_change_time(df_tail)
+earliest_change = find_final_change_time(df_tail)
 
-# base_tuple_list, df_extra = get_base_tuple_list(df, earliest_change)
+base_tuple_list, df_extra = get_base_tuple_list(df, earliest_change)
 
-length_dict = {}
+list_of_best_recs = []
+list_of_actuals = []
 
-for line in df['reviewers_name_list']:
-	try:
-		if not pd.isnull(line).all():
-			if len(line) in length_dict.keys():
-				length_dict[len(line)] += 1
-			else:
-				length_dict[len(line)] = 1
-	except AttributeError:
-		print("ugh")
-print(length_dict)
-
-# list_of_best_recs = []
-# list_of_actuals = []
-
-# for i, j in df_tail.iterrows(): 
-#     best_recs, actuals = find_best_for_specific_change(base_tuple_list, df_extra, j)
-#     list_of_best_recs.append(best_recs)
-#     list_of_actuals.append(actuals)
+for i, j in df_tail.iterrows(): 
+    best_recs, actuals = find_best_for_specific_change(base_tuple_list, df_extra, j)
+    list_of_best_recs.append(best_recs)
+    list_of_actuals.append(actuals)
     
+get_all_performance_metrics(list_of_best_recs, list_of_actuals)

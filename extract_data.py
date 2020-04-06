@@ -603,21 +603,27 @@ def find_last_comments(df, number_of_comments):
 
 	while number_obtained < number_of_comments:
 		final_line = df.tail(1)
-		line_labels = final_line['labels']
-		for line in line_labels:
-			reviewer = line['Code-Review']
-			if len(reviewer) > 0:
-				if 'approved' in reviewer.keys():
-					account_id = reviewer['approved']['_account_id']
-					baseURL = "https://gerrit-review.googlesource.com/accounts/" + str(account_id)
-					resp = requests.get(baseURL)
-					if resp.status_code == 200:
-						loaded = json.loads(resp.content.decode("utf-8").replace(")]}'",''))
-						name = loaded['name']
-						number_obtained+=1
-						list_of_reviewers.append(name)
-						df_line = final_line.values.tolist()
-						list_of_lines.append(df_line)
+		actual_reviewer_list = final_line['reviewers_name_list']
+		if not pd.isnull(actual_reviewer_list).all() and len(actual_reviewer_list) > 0:
+			if len(final_line['reviewers_name_list']) > 0:
+				number_obtained+=1
+				df_line = final_line.values.tolist()
+				list_of_lines.append(df_line)
+			# line_labels = final_line['labels']
+			# for line in line_labels:
+			# 	reviewer = line['Code-Review']
+				# if len(reviewer) > 0:
+				# 	if 'approved' in reviewer.keys():
+				# 		account_id = reviewer['approved']['_account_id']
+				# 		baseURL = "https://gerrit-review.googlesource.com/accounts/" + str(account_id)
+				# 		resp = requests.get(baseURL)
+				# 		if resp.status_code == 200:
+				# 			loaded = json.loads(resp.content.decode("utf-8").replace(")]}'",''))
+				# 			name = loaded['name']
+				# 			number_obtained+=1
+				# 			list_of_reviewers.append(name)
+				# 			df_line = final_line.values.tolist()
+				# 			list_of_lines.append(df_line)
 
 		df.drop(df.tail(1).index,inplace=True)
 	final_list = []
@@ -626,7 +632,7 @@ def find_last_comments(df, number_of_comments):
 
 	df_test = pd.DataFrame(final_list, columns = df.columns)
 
-	df_test['name_of_reviewer'] = list_of_reviewers
+	# df_test['name_of_reviewer'] = list_of_reviewers
 	return(df_test)
 
 

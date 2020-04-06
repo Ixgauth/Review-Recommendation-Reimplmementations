@@ -474,6 +474,7 @@ def find_best_for_specific_change(file_comment_tuple_list, df_extra, change):
 
 				if len(rev_recs) == 0:
 					print("nothing found")
+					return -1
 
 				else:
 					best_rec = rev_recs[:5]
@@ -484,16 +485,20 @@ def find_best_for_specific_change(file_comment_tuple_list, df_extra, change):
 			best_rec = rev_recs[:5]
 
 	if len(best_rec) != 0:
-		actual_reviewer = change['name_of_reviewer']
+		actual_reviewer_list = change['reviewers_name_list']
+		print(actual_reviewer_list)
 		printed = False
 		for line in best_rec:
-			if actual_reviewer in line:
-				print('YES')
-				return 1
-				printed = True
+			for name in actual_reviewer_list:
+				if name in line:
+					print('YES')
+					printed = True
+
 		if printed == False:
 			print('NO')
 			return 0
+		else:
+			return 1
 
 def find_best_for_specific_change_longer(df, change):
 	time_created = change['created']
@@ -525,6 +530,8 @@ def find_best_for_specific_change_longer(df, change):
 
 	owner = change['owner']
 
+	number_not_found = 0
+
 	best_rec = []
 
 	for key in files_in_change.keys():
@@ -553,6 +560,7 @@ def find_best_for_specific_change_longer(df, change):
 
 				if len(rev_recs) == 0:
 					print("nothing found")
+					number_not_found+=1
 
 				else:
 					best_rec = rev_recs[:5]
@@ -564,16 +572,27 @@ def find_best_for_specific_change_longer(df, change):
 
 	total_found = 0
 	if len(best_rec) != 0:
-		actual_reviewer = change['name_of_reviewer']
+		actual_reviewer_list = change['reviewers_name_list']
+		print(actual_reviewer_list)
 		printed = False
 		for line in best_rec:
-			if actual_reviewer in line:
-				print('YES')
-				total_found+=1
-				printed = True
-		if printed == False:
-			print('NO')
+			for name in actual_reviewer_list:
+				if name in line:
+					print("YES")
+					printed = True
+		if printed == True:
+			total_found +=1
+		else:
+			print("NO")
+
+		# 	if actual_reviewer in line:
+		# 		print('YES')
+		# 		total_found+=1
+		# 		printed = True
+		# if printed == False:
+		# 	print('NO')
 	print(total_found)
+	print(number_not_found)
 	
 def find_last_comments(df, number_of_comments):
 	number_obtained = 0
@@ -611,7 +630,7 @@ def find_last_comments(df, number_of_comments):
 	return(df_test)
 
 
-df = pd.read_json('test_data_with_comments.json')
+df = pd.read_json('test_data_without_detail.json')
 
 file_comment_tuple_list = []
 
@@ -633,10 +652,15 @@ base_tuple_list, df_extra = get_base_tuple_list(df, earliest_change)
 
 total_found = 0
 
+total_no_rec = 0
+
 for i, j in df_tail.iterrows(): 
     val = find_best_for_specific_change(base_tuple_list, df_extra, j)
     if val ==1:
     	total_found+=1
+    if val == -1:
+    	total_no_rec+=1
 print(total_found)
+print(total_no_rec)
     # find_best_for_specific_change_longer(df, j)
 

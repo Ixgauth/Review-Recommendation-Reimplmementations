@@ -542,9 +542,13 @@ def find_last_comments(df, number_of_comments):
 				if found_a_file == False:
 					print('no files')
 				else:
-					number_obtained+=1
-					df_line = final_line.values.tolist()
-					list_of_lines.append(df_line)
+					reviewers = final_line['reviewers_name_list'].to_list()[0]
+					if not reviewers:
+						print(reviewers)
+					else:
+						number_obtained+=1
+						df_line = final_line.values.tolist()
+						list_of_lines.append(df_line)
 			# line_labels = final_line['labels']
 			# for line in line_labels:
 			# 	reviewer = line['Code-Review']

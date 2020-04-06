@@ -474,6 +474,7 @@ def find_best_for_specific_change(file_comment_tuple_list, df_extra, change):
 
 				if len(rev_recs) == 0:
 					print("nothing found")
+					print(files_in_change)
 					return -1
 
 				else:
@@ -560,6 +561,7 @@ def find_best_for_specific_change_longer(df, change):
 
 				if len(rev_recs) == 0:
 					print("nothing found")
+					print(files_in_change)
 					number_not_found+=1
 
 				else:
@@ -606,9 +608,23 @@ def find_last_comments(df, number_of_comments):
 		actual_reviewer_list = final_line['reviewers_name_list']
 		if not pd.isnull(actual_reviewer_list).all() and len(actual_reviewer_list) > 0:
 			if len(final_line['reviewers_name_list']) > 0:
-				number_obtained+=1
-				df_line = final_line.values.tolist()
-				list_of_lines.append(df_line)
+				revisions = final_line['revisions']
+				revs_dict = revisions.to_dict()
+				found_a_file = False
+				for key in revs_dict.keys():
+					rev = revs_dict[key]
+					files_in_change = get_all_files_for_commit(rev)
+					for kye in files_in_change.keys():
+						if len(files_in_change[kye]) != 0:
+							found_a_file = True
+						else: 
+							continue
+				if found_a_file == False:
+					print('no files')
+				else:
+					number_obtained+=1
+					df_line = final_line.values.tolist()
+					list_of_lines.append(df_line)
 			# line_labels = final_line['labels']
 			# for line in line_labels:
 			# 	reviewer = line['Code-Review']

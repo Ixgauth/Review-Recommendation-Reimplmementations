@@ -302,7 +302,7 @@ def find_power_users(file_dictionary):
 
 def find_overlap(best_rec_line, actuals_line):
 
-	overlap = list(set(best_rec_trimmed) & set(actuals_line))
+	overlap = list(set(best_rec_line) & set(actuals_line))
 
 	number_overlap = len(overlap)
 
@@ -317,14 +317,17 @@ def find_precision_value(list_of_best_recs, list_of_actuals, m_value):
 		number_overlap = find_overlap(best_rec_trimmed, list_of_actuals[i])
 		total_number_overlap+= number_overlap
 		total_number_recommended += len(best_rec_trimmed)
+	print(total_number_overlap)
+	print(total_number_recommended)
 	precision = total_number_overlap / total_number_recommended
 	return precision
 
 
 def get_all_performance_metrics(list_of_best_recs, list_of_actuals):
-	for i in range(0, len(list_of_best_recs)):
-		find_overlap(list_of_best_recs[i], list_of_actuals[i], 5)
-
+	print(find_precision_value(list_of_best_recs, list_of_actuals, 1))
+	print(find_precision_value(list_of_best_recs, list_of_actuals, 2))
+	print(find_precision_value(list_of_best_recs, list_of_actuals, 3))
+	print(find_precision_value(list_of_best_recs, list_of_actuals, 5))
 
 
 def find_best_reviewer_always(df, file_comment_tuple_list):
@@ -620,7 +623,7 @@ file_comment_tuple_list = []
 # find_best_reviewer_always(df, file_comment_tuple_list)
 
 
-df_tail = find_last_comments(df.copy(), 5)
+df_tail = find_last_comments(df.copy(), 50)
 
 earliest_change = find_final_change_time(df_tail)
 

@@ -336,23 +336,47 @@ def find_f_score_value(precision, recall):
 	f_score = 2*precision*recall/(precision+recall)
 	return f_score
 
+def find_mean_reciprocal_rank(list_of_best_recs, list_of_actuals):
+	total_reciprocal_value = 0
+	number_of_changes = len(list_of_best_recs)
+	for i in range(0, len(list_of_best_recs)):
+		best_rank_in_line = 0
+		best_recs_for_line = list_of_best_recs[i]
+		for j in range(0, len(best_recs_for_line)):
+			rec = best_recs_for_line[j]
+			if find_overlap([rec], list_of_actuals[i]) > 0:
+				best_rank_in_line = j+1
+				break
+		if best_rank_in_line != 0:
+			reciprocal_value = 1/best_rank_in_line
+		else:
+			reciprocal_value = 0
+		total_reciprocal_value+= reciprocal_value
+	mean_reciprocal_value = total_reciprocal_value/number_of_changes
+	return mean_reciprocal_value
+		
+
+
 def get_all_performance_metrics(list_of_best_recs, list_of_actuals):
-	precision_1 = find_precision_value(list_of_best_recs, list_of_actuals, 1)
-	precision_2 = find_precision_value(list_of_best_recs, list_of_actuals, 2)
-	precision_3 = find_precision_value(list_of_best_recs, list_of_actuals, 3)
-	precision_5 = find_precision_value(list_of_best_recs, list_of_actuals, 5)
+	# precision_1 = find_precision_value(list_of_best_recs, list_of_actuals, 1)
+	# precision_2 = find_precision_value(list_of_best_recs, list_of_actuals, 2)
+	# precision_3 = find_precision_value(list_of_best_recs, list_of_actuals, 3)
+	# precision_5 = find_precision_value(list_of_best_recs, list_of_actuals, 5)
 
-	recall_1 = find_recall_value(list_of_best_recs, list_of_actuals, 1)
-	recall_2 = find_recall_value(list_of_best_recs, list_of_actuals, 2)
-	recall_3 = find_recall_value(list_of_best_recs, list_of_actuals, 3)
-	recall_5 = find_recall_value(list_of_best_recs, list_of_actuals, 5)
+	# recall_1 = find_recall_value(list_of_best_recs, list_of_actuals, 1)
+	# recall_2 = find_recall_value(list_of_best_recs, list_of_actuals, 2)
+	# recall_3 = find_recall_value(list_of_best_recs, list_of_actuals, 3)
+	# recall_5 = find_recall_value(list_of_best_recs, list_of_actuals, 5)
 
-	f_score_1 = find_f_score_value(precision_1, recall_1)
-	f_score_2 = find_f_score_value(precision_2, recall_2)
-	f_score_3 = find_f_score_value(precision_3, recall_3)
-	f_score_5 = find_f_score_value(precision_5, recall_5)
+	# f_score_1 = find_f_score_value(precision_1, recall_1)
+	# f_score_2 = find_f_score_value(precision_2, recall_2)
+	# f_score_3 = find_f_score_value(precision_3, recall_3)
+	# f_score_5 = find_f_score_value(precision_5, recall_5)
 
-	print(f_score_1, "  ", f_score_2, "  ", f_score_3, "  ", f_score_5)
+	# print(f_score_1, "  ", f_score_2, "  ", f_score_3, "  ", f_score_5)
+
+	mean_reciprocal_value = find_mean_reciprocal_rank(list_of_best_recs, list_of_actuals)
+	print(mean_reciprocal_value)
 
 def find_best_reviewer_always(df, file_comment_tuple_list):
 	file_dictionary = arrange_data(file_comment_tuple_list)

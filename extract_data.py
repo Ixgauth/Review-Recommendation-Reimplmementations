@@ -317,8 +317,6 @@ def find_precision_value(list_of_best_recs, list_of_actuals, m_value):
 		number_overlap = find_overlap(best_rec_trimmed, list_of_actuals[i])
 		total_number_overlap+= number_overlap
 		total_number_recommended += len(best_rec_trimmed)
-	print(total_number_overlap)
-	print(total_number_recommended)
 	precision = total_number_overlap / total_number_recommended
 	return precision
 
@@ -331,21 +329,30 @@ def find_recall_value(list_of_best_recs, list_of_actuals, m_value):
 		number_overlap = find_overlap(best_rec_trimmed, list_of_actuals[i])
 		total_number_overlap+= number_overlap
 		total_number_actuals += len(list_of_actuals[i])
-	print(total_number_overlap)
-	print(total_number_actuals)
 	recall = total_number_overlap/total_number_actuals
 	return recall
 
-def get_all_performance_metrics(list_of_best_recs, list_of_actuals):
-	print(find_precision_value(list_of_best_recs, list_of_actuals, 1))
-	print(find_precision_value(list_of_best_recs, list_of_actuals, 2))
-	print(find_precision_value(list_of_best_recs, list_of_actuals, 3))
-	print(find_precision_value(list_of_best_recs, list_of_actuals, 5))
+def find_f_score_value(precision, recall):
+	f_score = 2*precision*recall/(precision+recall)
+	return f_score
 
-	print(find_recall_value(list_of_best_recs, list_of_actuals, 1))
-	print(find_recall_value(list_of_best_recs, list_of_actuals, 2))
-	print(find_recall_value(list_of_best_recs, list_of_actuals, 3))
-	print(find_recall_value(list_of_best_recs, list_of_actuals, 5))
+def get_all_performance_metrics(list_of_best_recs, list_of_actuals):
+	precision_1 = find_precision_value(list_of_best_recs, list_of_actuals, 1)
+	precision_2 = find_precision_value(list_of_best_recs, list_of_actuals, 2)
+	precision_3 = find_precision_value(list_of_best_recs, list_of_actuals, 3)
+	precision_5 = find_precision_value(list_of_best_recs, list_of_actuals, 5)
+
+	recall_1 = find_recall_value(list_of_best_recs, list_of_actuals, 1)
+	recall_2 = find_recall_value(list_of_best_recs, list_of_actuals, 2)
+	recall_3 = find_recall_value(list_of_best_recs, list_of_actuals, 3)
+	recall_5 = find_recall_value(list_of_best_recs, list_of_actuals, 5)
+
+	f_score_1 = find_f_score_value(precision_1, recall_1)
+	f_score_2 = find_f_score_value(precision_2, recall_2)
+	f_score_3 = find_f_score_value(precision_3, recall_3)
+	f_score_5 = find_f_score_value(precision_5, recall_5)
+
+	print(f_score_1, "  ", f_score_2, "  ", f_score_3, "  ", f_score_5)
 
 def find_best_reviewer_always(df, file_comment_tuple_list):
 	file_dictionary = arrange_data(file_comment_tuple_list)

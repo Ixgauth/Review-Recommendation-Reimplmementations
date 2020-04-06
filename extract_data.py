@@ -300,19 +300,26 @@ def find_power_users(file_dictionary):
 	for i in range(0, 10):
 		print(reviewer_list[i])
 
-def find_overlap(best_rec_line, actuals_line, m_value):
-	best_rec_trimmed = best_rec_line[:m_value]
-
-	print(best_rec_trimmed)
+def find_overlap(best_rec_line, actuals_line):
 
 	overlap = list(set(best_rec_trimmed) & set(actuals_line))
 
 	number_overlap = len(overlap)
 
-	print(number_overlap)
+	return(number_overlap)
 
-# def find_precision_value(list_of_best_recs, list_of_actuals, m_value):
-# 	for
+def find_precision_value(list_of_best_recs, list_of_actuals, m_value):
+	total_number_overlap = 0
+	total_number_recommended = 0
+	for i in range(0, len(list_of_best_recs)):
+		b_r_a_l = list_of_best_recs[i]
+		best_rec_trimmed = b_r_a_l[:m_value]
+		number_overlap = find_overlap(best_rec_trimmed, list_of_actuals[i])
+		total_number_overlap+= number_overlap
+		total_number_recommended += len(best_rec_trimmed)
+	precision = total_number_overlap / total_number_recommended
+	return precision
+
 
 def get_all_performance_metrics(list_of_best_recs, list_of_actuals):
 	for i in range(0, len(list_of_best_recs)):

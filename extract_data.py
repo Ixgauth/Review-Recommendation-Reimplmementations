@@ -300,6 +300,13 @@ def find_power_users(file_dictionary):
 	for i in range(0, 10):
 		print(reviewer_list[i])
 
+def get_all_performance_metrics(list_of_best_recs, list_of_actuals):
+	longest = 0
+	for line in list_of_actuals:
+		if len(line) > longest:
+			longest = len(line)
+	print(longest)
+
 def find_best_reviewer_always(df, file_comment_tuple_list):
 	file_dictionary = arrange_data(file_comment_tuple_list)
 
@@ -440,8 +447,6 @@ def find_best_for_specific_change(file_comment_tuple_list, df_extra, change):
 
 	file_dictionary = obtain_X_factor(file_dictionary)
 
-	print(len(file_comment_tuple_list))
-	print(len(file_dictionary))
 	list_of_files = []
 	files_in_change = get_all_files_for_commit(change['revisions'])
 
@@ -480,6 +485,7 @@ def find_best_for_specific_change(file_comment_tuple_list, df_extra, change):
 
 			files_in_change_system = get_all_files_for_commit_system(change['revisions'])
 
+
 			list_of_files_system = []
 
 			for system_key in files_in_change_system.keys():
@@ -490,7 +496,6 @@ def find_best_for_specific_change(file_comment_tuple_list, df_extra, change):
 			if len(rev_recs) == 0:
 				print("nothing found")
 				print(files_in_change)
-				return -1
 
 			else:
 				best_rec = rev_recs[:5]
@@ -500,21 +505,23 @@ def find_best_for_specific_change(file_comment_tuple_list, df_extra, change):
 	else:
 		best_rec = rev_recs[:5]
 
-	if len(best_rec) != 0:
-		actual_reviewer_list = change['reviewers_name_list']
-		print(actual_reviewer_list)
-		printed = False
-		for line in best_rec:
-			for name in actual_reviewer_list:
-				if name in line:
-					print('YES')
-					printed = True
+	actual_reviewer_list = change['reviewers_name_list']
+	return(best_rec, actual_reviewer_list)
 
-		if printed == False:
-			print('NO')
-			return 0
-		else:
-			return 1
+
+		# print(actual_reviewer_list)
+		# printed = False
+		# for line in best_rec:
+		# 	for name in actual_reviewer_list:
+		# 		if name in line:
+		# 			print('YES')
+		# 			printed = True
+
+		# if printed == False:
+		# 	print('NO')
+		# 	return 0
+		# else:
+		# 	return 1
 	
 def find_last_comments(df, number_of_comments):
 	number_obtained = 0
@@ -590,22 +597,30 @@ file_comment_tuple_list = []
 # find_best_reviewer_always(df, file_comment_tuple_list)
 
 
-df_tail = find_last_comments(df.copy(), 200)
+# df_tail = find_last_comments(df.copy(), 100)
 
-earliest_change = find_final_change_time(df_tail)
+# earliest_change = find_final_change_time(df_tail)
 
-base_tuple_list, df_extra = get_base_tuple_list(df, earliest_change)
+# base_tuple_list, df_extra = get_base_tuple_list(df, earliest_change)
 
-total_found = 0
+length_dict = {}
 
-total_no_rec = 0
+for line in df['reviewers_name_list']:
+	try:
+		if not pd.isnull(line).all():
+			if len(line) in length_dict.keys():
+				length_dict[len(line)] += 1
+			else:
+				length_dict[len(line)] = 1
+	except AttributeError:
+		print("ugh")
+print(length_dict)
 
-for i, j in df_tail.iterrows(): 
-    val = find_best_for_specific_change(base_tuple_list, df_extra, j)
-    if val ==1:
-    	total_found+=1
-    if val == -1:
-    	total_no_rec+=1
-print(total_found)
-print(total_no_rec)
+# list_of_best_recs = []
+# list_of_actuals = []
 
+# for i, j in df_tail.iterrows(): 
+#     best_recs, actuals = find_best_for_specific_change(base_tuple_list, df_extra, j)
+#     list_of_best_recs.append(best_recs)
+#     list_of_actuals.append(actuals)
+    

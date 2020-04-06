@@ -358,22 +358,22 @@ def find_mean_reciprocal_rank(list_of_best_recs, list_of_actuals):
 
 
 def get_all_performance_metrics(list_of_best_recs, list_of_actuals):
-	# precision_1 = find_precision_value(list_of_best_recs, list_of_actuals, 1)
-	# precision_2 = find_precision_value(list_of_best_recs, list_of_actuals, 2)
-	# precision_3 = find_precision_value(list_of_best_recs, list_of_actuals, 3)
-	# precision_5 = find_precision_value(list_of_best_recs, list_of_actuals, 5)
+	precision_1 = find_precision_value(list_of_best_recs, list_of_actuals, 1)
+	precision_2 = find_precision_value(list_of_best_recs, list_of_actuals, 2)
+	precision_3 = find_precision_value(list_of_best_recs, list_of_actuals, 3)
+	precision_5 = find_precision_value(list_of_best_recs, list_of_actuals, 5)
 
-	# recall_1 = find_recall_value(list_of_best_recs, list_of_actuals, 1)
-	# recall_2 = find_recall_value(list_of_best_recs, list_of_actuals, 2)
-	# recall_3 = find_recall_value(list_of_best_recs, list_of_actuals, 3)
-	# recall_5 = find_recall_value(list_of_best_recs, list_of_actuals, 5)
+	recall_1 = find_recall_value(list_of_best_recs, list_of_actuals, 1)
+	recall_2 = find_recall_value(list_of_best_recs, list_of_actuals, 2)
+	recall_3 = find_recall_value(list_of_best_recs, list_of_actuals, 3)
+	recall_5 = find_recall_value(list_of_best_recs, list_of_actuals, 5)
 
-	# f_score_1 = find_f_score_value(precision_1, recall_1)
-	# f_score_2 = find_f_score_value(precision_2, recall_2)
-	# f_score_3 = find_f_score_value(precision_3, recall_3)
-	# f_score_5 = find_f_score_value(precision_5, recall_5)
+	f_score_1 = find_f_score_value(precision_1, recall_1)
+	f_score_2 = find_f_score_value(precision_2, recall_2)
+	f_score_3 = find_f_score_value(precision_3, recall_3)
+	f_score_5 = find_f_score_value(precision_5, recall_5)
 
-	# print(f_score_1, "  ", f_score_2, "  ", f_score_3, "  ", f_score_5)
+	print(f_score_1, "  ", f_score_2, "  ", f_score_3, "  ", f_score_5)
 
 	mean_reciprocal_value = find_mean_reciprocal_rank(list_of_best_recs, list_of_actuals)
 	print(mean_reciprocal_value)
@@ -581,21 +581,6 @@ def find_best_for_specific_change(file_comment_tuple_list, df_extra, change):
 		best_rec_no_value.append(rec[1])
 	actual_reviewer_list = change['reviewers_name_list']
 	return(best_rec_no_value, actual_reviewer_list)
-
-
-		# print(actual_reviewer_list)
-		# printed = False
-		# for line in best_rec:
-		# 	for name in actual_reviewer_list:
-		# 		if name in line:
-		# 			print('YES')
-		# 			printed = True
-
-		# if printed == False:
-		# 	print('NO')
-		# 	return 0
-		# else:
-		# 	return 1
 	
 def find_last_comments(df, number_of_comments):
 	number_obtained = 0
@@ -630,21 +615,6 @@ def find_last_comments(df, number_of_comments):
 						number_obtained+=1
 						df_line = final_line.values.tolist()
 						list_of_lines.append(df_line)
-			# line_labels = final_line['labels']
-			# for line in line_labels:
-			# 	reviewer = line['Code-Review']
-				# if len(reviewer) > 0:
-				# 	if 'approved' in reviewer.keys():
-				# 		account_id = reviewer['approved']['_account_id']
-				# 		baseURL = "https://gerrit-review.googlesource.com/accounts/" + str(account_id)
-				# 		resp = requests.get(baseURL)
-				# 		if resp.status_code == 200:
-				# 			loaded = json.loads(resp.content.decode("utf-8").replace(")]}'",''))
-				# 			name = loaded['name']
-				# 			number_obtained+=1
-				# 			list_of_reviewers.append(name)
-				# 			df_line = final_line.values.tolist()
-				# 			list_of_lines.append(df_line)
 
 		df.drop(df.tail(1).index,inplace=True)
 	final_list = []
@@ -653,22 +623,12 @@ def find_last_comments(df, number_of_comments):
 
 	df_test = pd.DataFrame(final_list, columns = df.columns)
 
-	# df_test['name_of_reviewer'] = list_of_reviewers
 	return(df_test)
 
 
 df = pd.read_json('test_data_without_detail.json')
 
 file_comment_tuple_list = []
-
-# for i in range(0, len(df['owner'])):
-# 	comments = df['comments'][i]
-# 	if isinstance(comments, dict):
-# 		file_comment_tuple_list = file_comment_tuple_list + get_comment_tuples(df['owner'][i]["_account_id"], comments)
-
-# print(len(file_comment_tuple_list))
-			
-# find_best_reviewer_always(df, file_comment_tuple_list)
 
 
 df_tail = find_last_comments(df.copy(), 50)

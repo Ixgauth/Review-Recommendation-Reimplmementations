@@ -322,6 +322,19 @@ def find_precision_value(list_of_best_recs, list_of_actuals, m_value):
 	precision = total_number_overlap / total_number_recommended
 	return precision
 
+def find_recall_value(list_of_best_recs, list_of_actuals, m_value):
+	total_number_overlap = 0
+	total_number_actuals = 0
+	for i in range(0, len(list_of_best_recs)):
+		b_r_a_l = list_of_best_recs[i]
+		best_rec_trimmed = b_r_a_l[:m_value]
+		number_overlap = find_overlap(best_rec_trimmed, list_of_actuals[i])
+		total_number_overlap+= number_overlap
+		total_number_actuals += len(list_of_actuals[i])
+	print(total_number_overlap)
+	print(total_number_actuals)
+	recall = total_number_overlap/total_number_actuals
+	return recall
 
 def get_all_performance_metrics(list_of_best_recs, list_of_actuals):
 	print(find_precision_value(list_of_best_recs, list_of_actuals, 1))
@@ -329,6 +342,10 @@ def get_all_performance_metrics(list_of_best_recs, list_of_actuals):
 	print(find_precision_value(list_of_best_recs, list_of_actuals, 3))
 	print(find_precision_value(list_of_best_recs, list_of_actuals, 5))
 
+	print(find_recall_value(list_of_best_recs, list_of_actuals, 1))
+	print(find_recall_value(list_of_best_recs, list_of_actuals, 2))
+	print(find_recall_value(list_of_best_recs, list_of_actuals, 3))
+	print(find_recall_value(list_of_best_recs, list_of_actuals, 5))
 
 def find_best_reviewer_always(df, file_comment_tuple_list):
 	file_dictionary = arrange_data(file_comment_tuple_list)

@@ -378,6 +378,53 @@ def get_all_performance_metrics(list_of_best_recs, list_of_actuals):
 	mean_reciprocal_value = find_mean_reciprocal_rank(list_of_best_recs, list_of_actuals)
 	print(mean_reciprocal_value)
 
+	outfile = open("results_file.txt", "w")
+	outstring = "Precision_1: " + str(precision_1)
+	outfile.write(outstring)
+	outfile.write('\n')
+	outstring = "Precision_2: "+ str(precision_2)
+	outfile.write(outstring)
+	outfile.write('\n')
+	outstring = "Precision_3: "+ str(precision_3)
+	outfile.write(outstring)
+	outfile.write('\n')
+	outstring = "Precision_5: "+ str(precision_5)
+	outfile.write(outstring)
+	outfile.write('\n')
+	outfile.write('\n')
+
+	outstring = "Recall_1: "+ str(recall_1)
+	outfile.write(outstring)
+	outfile.write('\n')
+	outstring = "Recall_2: "+ str(recall_2)
+	outfile.write(outstring)
+	outfile.write('\n')
+	outstring = "Recall_3: "+ str(recall_3)
+	outfile.write(outstring)
+	outfile.write('\n')
+	outstring = "Recall_5: "+ str(recall_5)
+	outfile.write(outstring)
+	outfile.write('\n')
+	outfile.write('\n')
+
+	outstring = "F_Score_1: "+ str(f_score_1)
+	outfile.write(outstring)
+	outfile.write('\n')
+	outstring = "F_Score_2: "+ str(f_score_2)
+	outfile.write(outstring)
+	outfile.write('\n')
+	outstring = "F_Score_3: "+ str(f_score_3)
+	outfile.write(outstring)
+	outfile.write('\n')
+	outstring = "F_Score_5: "+ str(f_score_5)
+	outfile.write(outstring)
+	outfile.write('\n')
+	outfile.write('\n')
+
+	outstring = "Mean Reciprocal Value: " + str(mean_reciprocal_value)
+	outfile.write(outstring)
+
+
 def find_best_reviewer_always(df, file_comment_tuple_list):
 	file_dictionary = arrange_data(file_comment_tuple_list)
 
@@ -631,7 +678,7 @@ df = pd.read_json('test_data_without_detail.json')
 file_comment_tuple_list = []
 
 
-df_tail = find_last_comments(df.copy(), 50)
+df_tail = find_last_comments(df.copy(), 250)
 
 earliest_change = find_final_change_time(df_tail)
 

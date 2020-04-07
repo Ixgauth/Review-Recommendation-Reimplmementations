@@ -616,12 +616,12 @@ def find_best_for_specific_change(file_comment_tuple_list, df_extra, change):
 				print(files_in_change)
 
 			else:
-				best_rec = rev_recs[:5]
+				best_rec = rev_recs
 
 		else:
-			best_rec = rev_recs[:5]
+			best_rec = rev_recs
 	else:
-		best_rec = rev_recs[:5]
+		best_rec = rev_recs
 
 	best_rec_no_value = []
 	for rec in best_rec:

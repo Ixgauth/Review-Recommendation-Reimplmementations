@@ -9,23 +9,28 @@ from pathlib import Path
 import requests
 from datetime import timedelta, date, datetime
 
-def get_comment_info(single_comment):
+#intake a single comment and return the date when it was written as long as the name of the author
+#this will be returned as a tuple for each line in a given comment
+def get_comment_info(single_comment,owner ):
 	info = []
 	for line in single_comment:
 		date_time_str = line['updated']
 		date_time_str = date_time_str.replace('.000000000', '')
 		date_time_obj = datetime.strptime(date_time_str, '%Y-%m-%d %H:%M:%S')
 		date_obj = date_time_obj.date()
+		if line['author']['_account_id'] == owner:
+			continue
 		info_tuple = line['author']['name'], str(date_obj)
 		info.append(info_tuple)
 	return info
 
+#shoul
 def get_comment_tuples(owner, comments):
 	tuple_list = []
 	for key in comments.keys():
 		if key == "/COMMIT_MSG":
 			continue
-		comment_info = get_comment_info(comments[key])
+		comment_info = get_comment_info(comments[key], owner)
 
 		for author in comment_info:
 			if owner == author[0]:
@@ -34,6 +39,19 @@ def get_comment_tuples(owner, comments):
 				file_comment_tuple = (key, author[0],author[1])
 				tuple_list.append(file_comment_tuple)
 	return tuple_list
+
+def get_comment_tuples_all_files(owner, comments, list_of_files):
+	tuple_list = []
+	list_of_authors = []
+	for key in comments.keys():
+		comment_info = get_comment_info(comments[key], owner)
+		for author in comment_info:
+			if owner == author[0]:
+				continue
+			else:
+				list_of_authors.append(author[0])
+	print(owner)
+	print(list_of_authors)
 
 def get_most_recent_workday(file):
 	most_recent_date = date(2000,1,1)
@@ -527,9 +545,16 @@ def get_base_tuple_list(df, earliest_time):
 		change_time = change_time.replace('.000000000', '')
 		change_time_obj = datetime.strptime(change_time, '%Y-%m-%d %H:%M:%S')
 		if earliest_time > change_time_obj:
+			files = get_all_files_for_commit(df['revisions'][i])
+			# print(files)
+			# print()
 			comments = df['comments'][i]
 			if isinstance(comments, dict):
 				file_comment_tuple_list = file_comment_tuple_list + get_comment_tuples(df['owner'][i]["_account_id"], comments)
+				# print(get_comment_tuples(df['owner'][i]["_account_id"], comments))
+				# get_comment_tuples_all_files(df['owner'][i]["_account_id"], comments, files)
+				# print()
+				# print()
 		else:
 			current_row = df.iloc[[i]]
 			df_line = current_row.values.tolist()
@@ -693,3 +718,10 @@ for i, j in df_tail.iterrows():
     list_of_actuals.append(actuals)
     
 get_all_performance_metrics(list_of_best_recs, list_of_actuals)
+
+
+# df = pd.read_json('smaller_test_data_with_reviewers.json')
+
+# final_time = date_time_obj = datetime.strptime("2020-01-01 18:12:52", '%Y-%m-%d %H:%M:%S')
+
+# print(len(get_base_tuple_list(df, final_time)[0]))

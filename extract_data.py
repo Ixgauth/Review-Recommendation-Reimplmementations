@@ -42,16 +42,16 @@ def get_comment_tuples(owner, comments):
 
 def get_comment_tuples_all_files(owner, comments, list_of_files):
 	tuple_list = []
-	list_of_authors = []
 	for key in comments.keys():
 		comment_info = get_comment_info(comments[key], owner)
 		for author in comment_info:
 			if owner == author[0]:
 				continue
 			else:
-				list_of_authors.append(author[0])
-	print(owner)
-	print(list_of_authors)
+				for file in list_of_files:
+					file_comment_tuple = (file, author[0],author[1])
+					tuple_list.append(file_comment_tuple)
+	return tuple_list
 
 def get_most_recent_workday(file):
 	most_recent_date = date(2000,1,1)
@@ -541,20 +541,19 @@ def get_base_tuple_list(df, earliest_time):
 	changes_after_base = []
 
 	for i in range(0, len(df['owner'])):
+		if i % 100 == 0:
+			print(i)
 		change_time = df['created'][i]
 		change_time = change_time.replace('.000000000', '')
 		change_time_obj = datetime.strptime(change_time, '%Y-%m-%d %H:%M:%S')
 		if earliest_time > change_time_obj:
-			files = get_all_files_for_commit(df['revisions'][i])
-			# print(files)
-			# print()
+			rev_files = get_all_files_for_commit(df['revisions'][i])
+			files = []
+			for change in rev_files.keys():
+				files = files + rev_files[change]
 			comments = df['comments'][i]
 			if isinstance(comments, dict):
-				file_comment_tuple_list = file_comment_tuple_list + get_comment_tuples(df['owner'][i]["_account_id"], comments)
-				# print(get_comment_tuples(df['owner'][i]["_account_id"], comments))
-				# get_comment_tuples_all_files(df['owner'][i]["_account_id"], comments, files)
-				# print()
-				# print()
+				file_comment_tuple_list = file_comment_tuple_list + get_comment_tuples_all_files(df['owner'][i]["_account_id"], comments, files)
 		else:
 			current_row = df.iloc[[i]]
 			df_line = current_row.values.tolist()
@@ -580,9 +579,10 @@ def find_best_for_specific_change(file_comment_tuple_list, df_extra, change):
 		change_time = change_time.replace('.000000000', '')
 		change_time_obj = datetime.strptime(change_time, '%Y-%m-%d %H:%M:%S')
 		if date_time_obj > change_time_obj:
+			files = get_all_files_for_commit(df_extra['revisions'][i])
 			comments = df_extra['comments'][i]
 			if isinstance(comments, dict):
-				file_comment_tuple_list = file_comment_tuple_list + get_comment_tuples(df['owner'][i]["_account_id"], comments)
+				file_comment_tuple_list = file_comment_tuple_list + get_comment_tuples_all_files(df['owner'][i]["_account_id"], comments, files)
 
 	file_dictionary = arrange_data(file_comment_tuple_list)
 
@@ -703,25 +703,29 @@ df = pd.read_json('test_data_without_detail.json')
 file_comment_tuple_list = []
 
 
-df_tail = find_last_comments(df.copy(), 250)
+# df_tail = find_last_comments(df.copy(), 51)
 
-earliest_change = find_final_change_time(df_tail)
+# earliest_change = find_final_change_time(df_tail)
+# print('gothere2')
 
-base_tuple_list, df_extra = get_base_tuple_list(df, earliest_change)
+# base_tuple_list, df_extra = get_base_tuple_list(df, earliest_change)
+# print('gothere3')
 
-list_of_best_recs = []
-list_of_actuals = []
+# print(len(base_tuple_list))
 
-for i, j in df_tail.iterrows(): 
-    best_recs, actuals = find_best_for_specific_change(base_tuple_list, df_extra, j)
-    list_of_best_recs.append(best_recs)
-    list_of_actuals.append(actuals)
+# list_of_best_recs = []
+# list_of_actuals = []
+
+# for i, j in df_tail.iterrows(): 
+#     best_recs, actuals = find_best_for_specific_change(base_tuple_list, df_extra, j)
+#     list_of_best_recs.append(best_recs)
+#     list_of_actuals.append(actuals)
     
-get_all_performance_metrics(list_of_best_recs, list_of_actuals)
+# get_all_performance_metrics(list_of_best_recs, list_of_actuals)
 
 
-# df = pd.read_json('smaller_test_data_with_reviewers.json')
+df = pd.read_json('smaller_test_data_with_reviewers.json')
 
-# final_time = date_time_obj = datetime.strptime("2020-01-01 18:12:52", '%Y-%m-%d %H:%M:%S')
+final_time = date_time_obj = datetime.strptime("2020-01-01 18:12:52", '%Y-%m-%d %H:%M:%S')
 
-# print(len(get_base_tuple_list(df, final_time)[0]))
+print(len(get_base_tuple_list(df, final_time)[0]))

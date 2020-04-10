@@ -602,6 +602,13 @@ def find_best_for_specific_change(file_comment_tuple_list, df_extra, change):
 
 	owner = change['owner']
 
+	baseURL_REST = "https://gerrit-review.googlesource.com/accounts/" + str(owner["_account_id"])
+	resp = requests.get(baseURL_REST)
+	owner_name = ''
+	if resp.status_code == 200:
+		loaded = json.loads(resp.content.decode("utf-8").replace(")]}'",''))
+		owner_name = loaded['name']
+
 	best_rec = []
 
 	rev_recs = find_best_reviewer(list_of_files, file_dictionary, owner)
@@ -623,6 +630,7 @@ def find_best_for_specific_change(file_comment_tuple_list, df_extra, change):
 		rev_recs = find_best_reviewer(list_of_files_package, file_dictionary_package, owner)
 
 		if len(rev_recs) == 0:
+			print(owner)
 			print('nothing found at package')
 			file_dictionary_system = arrange_data_system(file_comment_tuple_list)
 
@@ -650,6 +658,17 @@ def find_best_for_specific_change(file_comment_tuple_list, df_extra, change):
 		else:
 			best_rec = rev_recs
 	else:
+		owner_found = []
+		for rec in rev_recs:
+			if owner_name in rec:
+				print("FOUND THE OWNER")
+				print(len(rev_recs))
+				owner_found.append(rec)
+
+		if len(owner_found) > 0:
+			for line in owner_found:
+				rev_recs.remove(line)
+			print(len(rev_recs))
 		best_rec = rev_recs
 
 	best_rec_no_value = []
@@ -707,7 +726,7 @@ df = pd.read_json('test_data_without_detail.json')
 file_comment_tuple_list = []
 
 
-df_tail = find_last_comments(df.copy(), 250)
+df_tail = find_last_comments(df.copy(), 50)
 
 earliest_change = find_final_change_time(df_tail)
 

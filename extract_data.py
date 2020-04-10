@@ -553,7 +553,7 @@ def get_base_tuple_list(df, earliest_time):
 				files = files + rev_files[change]
 			comments = df['comments'][i]
 			if isinstance(comments, dict):
-				file_comment_tuple_list = file_comment_tuple_list + get_comment_tuples_all_files(df['owner'][i]["_account_id"], comments, files)
+				file_comment_tuple_list = file_comment_tuple_list + get_comment_tuples(df['owner'][i]["_account_id"], comments)
 		else:
 			current_row = df.iloc[[i]]
 			df_line = current_row.values.tolist()
@@ -579,11 +579,15 @@ def find_best_for_specific_change(file_comment_tuple_list, df_extra, change):
 		change_time = change_time.replace('.000000000', '')
 		change_time_obj = datetime.strptime(change_time, '%Y-%m-%d %H:%M:%S')
 		if date_time_obj > change_time_obj:
-			files = get_all_files_for_commit(df_extra['revisions'][i])
+			rev_files = get_all_files_for_commit(df['revisions'][i])
+			files = []
+			for rev in rev_files.keys():
+				files = files + rev_files[rev]
 			comments = df_extra['comments'][i]
 			if isinstance(comments, dict):
-				file_comment_tuple_list = file_comment_tuple_list + get_comment_tuples_all_files(df['owner'][i]["_account_id"], comments, files)
+				file_comment_tuple_list = file_comment_tuple_list + get_comment_tuples(df['owner'][i]["_account_id"], comments)
 
+	print(len(file_comment_tuple_list))
 	file_dictionary = arrange_data(file_comment_tuple_list)
 
 	file_dictionary = obtain_all_metrics(file_dictionary)
@@ -703,29 +707,28 @@ df = pd.read_json('test_data_without_detail.json')
 file_comment_tuple_list = []
 
 
-# df_tail = find_last_comments(df.copy(), 51)
+df_tail = find_last_comments(df.copy(), 250)
 
-# earliest_change = find_final_change_time(df_tail)
-# print('gothere2')
+earliest_change = find_final_change_time(df_tail)
 
-# base_tuple_list, df_extra = get_base_tuple_list(df, earliest_change)
-# print('gothere3')
+base_tuple_list, df_extra = get_base_tuple_list(df, earliest_change)
 
-# print(len(base_tuple_list))
+print(len(base_tuple_list))
 
-# list_of_best_recs = []
-# list_of_actuals = []
+list_of_best_recs = []
+list_of_actuals = []
 
-# for i, j in df_tail.iterrows(): 
-#     best_recs, actuals = find_best_for_specific_change(base_tuple_list, df_extra, j)
-#     list_of_best_recs.append(best_recs)
-#     list_of_actuals.append(actuals)
+for i, j in df_tail.iterrows(): 
+
+	best_recs, actuals = find_best_for_specific_change(base_tuple_list, df_extra, j)
+	list_of_best_recs.append(best_recs)
+	list_of_actuals.append(actuals)
     
-# get_all_performance_metrics(list_of_best_recs, list_of_actuals)
+get_all_performance_metrics(list_of_best_recs, list_of_actuals)
 
 
-df = pd.read_json('smaller_test_data_with_reviewers.json')
+# df = pd.read_json('smaller_test_data_with_reviewers.json')
 
-final_time = date_time_obj = datetime.strptime("2020-01-01 18:12:52", '%Y-%m-%d %H:%M:%S')
+# final_time = date_time_obj = datetime.strptime("2020-01-01 18:12:52", '%Y-%m-%d %H:%M:%S')
 
-print(len(get_base_tuple_list(df, final_time)[0]))
+# print(len(get_base_tuple_list(df, final_time)[0]))

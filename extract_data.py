@@ -612,6 +612,11 @@ def find_best_for_specific_change(file_comment_tuple_list, df_extra, change):
 	best_rec = []
 
 	rev_recs = find_best_reviewer(list_of_files, file_dictionary, owner)
+	if len(rev_recs) == 1:
+		only_rec = rev_recs[0]
+		if owner_name in only_rec:
+			rev_recs.remove(only_rec)
+			print(len(rev_recs))
 	if len(rev_recs) == 0:
 		print('nothing found at review level')
 		file_dictionary_package = arrange_data_for_package(file_comment_tuple_list)
@@ -653,9 +658,29 @@ def find_best_for_specific_change(file_comment_tuple_list, df_extra, change):
 				print(files_in_change)
 
 			else:
+				owner_found = []
+				for rec in rev_recs:
+					if owner_name in rec:
+						owner_found.append(rec)
+
+				if len(owner_found) > 0:
+					for line in owner_found:
+						rev_recs.remove(line)
+					print(len(rev_recs))
 				best_rec = rev_recs
 
 		else:
+			owner_found = []
+			for rec in rev_recs:
+				if owner_name in rec:
+					print("FOUND THE OWNER")
+					print(len(rev_recs))
+					owner_found.append(rec)
+
+			if len(owner_found) > 0:
+				for line in owner_found:
+					rev_recs.remove(line)
+				print(len(rev_recs))
 			best_rec = rev_recs
 	else:
 		owner_found = []

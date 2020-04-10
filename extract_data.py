@@ -535,14 +535,27 @@ def find_final_change_time(test_df):
 			earliest_time = change_time_obj
 	return(earliest_time)
 
+def get_tuple_list_all_files(df):
+	file_comment_tuple_list = []
+
+	for i in range(0, len(df['owner'])):
+		rev_files = get_all_files_for_commit(df['revisions'][i])
+		files = []
+		for change in rev_files.keys():
+			files = files + rev_files[change]
+		comments = df['comments'][i]
+		if isinstance(comments, dict):
+			file_comment_tuple_list = file_comment_tuple_list + get_comment_tuples_all_files(df['owner'][i]["_account_id"], comments, files)
+
+	print("all tuple list length", len(file_comment_tuple_list))
+	return file_comment_tuple_list
+
 def get_base_tuple_list(df, earliest_time):
 	file_comment_tuple_list = []
 
 	changes_after_base = []
 
 	for i in range(0, len(df['owner'])):
-		if i % 100 == 0:
-			print(i)
 		change_time = df['created'][i]
 		change_time = change_time.replace('.000000000', '')
 		change_time_obj = datetime.strptime(change_time, '%Y-%m-%d %H:%M:%S')
@@ -567,7 +580,7 @@ def get_base_tuple_list(df, earliest_time):
 
 	return file_comment_tuple_list, df_extra 
 
-def find_best_for_specific_change(file_comment_tuple_list, df_extra, change):
+def find_best_for_specific_change(file_comment_tuple_list, df_extra, change, full_df):
 	time_created = change['created']
 	time_created = time_created.replace('.000000000', '')
 	date_time_obj = datetime.strptime(time_created, '%Y-%m-%d %H:%M:%S')
@@ -616,7 +629,6 @@ def find_best_for_specific_change(file_comment_tuple_list, df_extra, change):
 		only_rec = rev_recs[0]
 		if owner_name in only_rec:
 			rev_recs.remove(only_rec)
-			print(len(rev_recs))
 	if len(rev_recs) == 0:
 		print('nothing found at review level')
 		file_dictionary_package = arrange_data_for_package(file_comment_tuple_list)
@@ -633,9 +645,11 @@ def find_best_for_specific_change(file_comment_tuple_list, df_extra, change):
 			list_of_files_package = list_of_files_package + files_in_change_package[package_key]
 
 		rev_recs = find_best_reviewer(list_of_files_package, file_dictionary_package, owner)
-
+		if len(rev_recs) == 1:
+			only_rec = rev_recs[0]
+			if owner_name in only_rec:
+				rev_recs.remove(only_rec)
 		if len(rev_recs) == 0:
-			print(owner)
 			print('nothing found at package')
 			file_dictionary_system = arrange_data_system(file_comment_tuple_list)
 
@@ -656,6 +670,23 @@ def find_best_for_specific_change(file_comment_tuple_list, df_extra, change):
 			if len(rev_recs) == 0:
 				print("nothing found")
 				print(files_in_change)
+				file_com_tup_list_all_files = get_tuple_list_all_files(full_df)
+				file_dictionary_failsafe = arrange_data(file_com_tup_list_all_files)
+				file_dictionary_failsafe = obtain_all_metrics(file_dictionary_failsafe)
+				file_dictionary_failsafe = obtain_X_factor(file_dictionary_failsafe)
+				rev_recs = find_best_reviewer(list_of_files, file_dictionary_failsafe, owner)
+				if len(rev_recs) == 0:
+					print('still nothing')
+				else:
+					owner_found = []
+					for rec in rev_recs:
+						if owner_name in rec:
+							owner_found.append(rec)
+
+					if len(owner_found) > 0:
+						for line in owner_found:
+							rev_recs.remove(line)
+					best_rec = rev_recs
 
 			else:
 				owner_found = []
@@ -666,34 +697,27 @@ def find_best_for_specific_change(file_comment_tuple_list, df_extra, change):
 				if len(owner_found) > 0:
 					for line in owner_found:
 						rev_recs.remove(line)
-					print(len(rev_recs))
 				best_rec = rev_recs
 
 		else:
 			owner_found = []
 			for rec in rev_recs:
 				if owner_name in rec:
-					print("FOUND THE OWNER")
-					print(len(rev_recs))
 					owner_found.append(rec)
 
 			if len(owner_found) > 0:
 				for line in owner_found:
 					rev_recs.remove(line)
-				print(len(rev_recs))
 			best_rec = rev_recs
 	else:
 		owner_found = []
 		for rec in rev_recs:
 			if owner_name in rec:
-				print("FOUND THE OWNER")
-				print(len(rev_recs))
 				owner_found.append(rec)
 
 		if len(owner_found) > 0:
 			for line in owner_found:
 				rev_recs.remove(line)
-			print(len(rev_recs))
 		best_rec = rev_recs
 
 	best_rec_no_value = []
@@ -751,7 +775,7 @@ df = pd.read_json('test_data_without_detail.json')
 file_comment_tuple_list = []
 
 
-df_tail = find_last_comments(df.copy(), 50)
+df_tail = find_last_comments(df.copy(), 250)
 
 earliest_change = find_final_change_time(df_tail)
 
@@ -764,15 +788,8 @@ list_of_actuals = []
 
 for i, j in df_tail.iterrows(): 
 
-	best_recs, actuals = find_best_for_specific_change(base_tuple_list, df_extra, j)
+	best_recs, actuals = find_best_for_specific_change(base_tuple_list, df_extra, j, df)
 	list_of_best_recs.append(best_recs)
 	list_of_actuals.append(actuals)
     
 get_all_performance_metrics(list_of_best_recs, list_of_actuals)
-
-
-# df = pd.read_json('smaller_test_data_with_reviewers.json')
-
-# final_time = date_time_obj = datetime.strptime("2020-01-01 18:12:52", '%Y-%m-%d %H:%M:%S')
-
-# print(len(get_base_tuple_list(df, final_time)[0]))

@@ -775,7 +775,7 @@ df = pd.read_json('test_data_without_detail.json')
 file_comment_tuple_list = []
 
 
-df_tail = find_last_comments(df.copy(), 250)
+df_tail = find_last_comments(df.copy(), 1000)
 
 earliest_change = find_final_change_time(df_tail)
 
@@ -787,9 +787,16 @@ list_of_best_recs = []
 list_of_actuals = []
 
 for i, j in df_tail.iterrows(): 
-
 	best_recs, actuals = find_best_for_specific_change(base_tuple_list, df_extra, j, df)
 	list_of_best_recs.append(best_recs)
 	list_of_actuals.append(actuals)
+
+
+df_tail['recommendations'] = list_of_best_recs
+
+df_tail.to_csv('data_with_recommendations.csv', index = False, header = True)
     
+df_tail = df_tail.to_json("data_with_recommendations.json")
 get_all_performance_metrics(list_of_best_recs, list_of_actuals)
+
+

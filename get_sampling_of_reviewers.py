@@ -48,21 +48,29 @@ def get_right_wrong_reviewers(df, reviewers_dict, recommendations_dict):
 		reviewers_names = df['reviewers_name_list'][i]
 		recommendations = df['recommendations'][i][:5]
 
+		if i > 20:
+			break
 		for reviewer in reviewers_names:
 			if reviewer in recommendations:
 				if reviewer in overlapping_recs.keys():
-					overlapping_recs[reviewer] += 1
+					overlapping_recs[reviewer].append(df.loc[i, :].values.tolist())
 				else:
-					overlapping_recs[reviewer] = 1
+					current_line = df.iloc[[i]]
+					overlapping_recs[reviewer] = [df.loc[i, :].values.tolist()]
 			else:
 				if reviewer in non_overlapping_recs.keys():
-					non_overlapping_recs[reviewer] += 1
+					current_line = df.iloc[[i]]
+					non_overlapping_recs[reviewer].append(df.loc[i, :].values.tolist())
 				else:
-					non_overlapping_recs[reviewer] = 1
-	print(overlapping_recs)
-	print(non_overlapping_recs)
+					current_line = df.iloc[[i]]
+					non_overlapping_recs[reviewer] = [df.loc[i, :].values.tolist()]
+
+	print(overlapping_recs.keys())
+	print(non_overlapping_recs.keys())
 	print(len(overlapping_recs))
 	print(len(non_overlapping_recs))
+
+	return overlapping_recs, non_overlapping_recs
 	
 
 
@@ -78,4 +86,4 @@ recommendations_dict = get_reccomendataion_dictionary(df)
 
 # print(len(recommendations_dict.keys()))
 
-get_right_wrong_reviewers(df, reviewers_dict, recommendations_dict)
+overlapping_recs, non_overlapping_recs = get_right_wrong_reviewers(df, reviewers_dict, recommendations_dict)

@@ -4,6 +4,7 @@ import os
 import pathlib
 import requests
 import pandas as pd
+from datetime import timedelta, date, datetime
 
 def get_reviewer_dictionary(df):
 	reviewers_dictionary = {}
@@ -100,42 +101,48 @@ def get_right_wrong_reviewers(df, reviewers_dict, recommendations_dict):
 	print(len(overlapping_recs))
 	print(len(non_overlapping_recs))
 	return overlapping_recs, non_overlapping_recs
+
+def get_latest_change(dict_of_changes):
+	first_review_time = datetime.strptime("2012-01-01 00:00:00", '%Y-%m-%d %H:%M:%S')
+	first_review = []
+	for key in dict_of_changes.keys():
+		cur_review_str = dict_of_changes[key]['updated']
+		cur_review_str = cur_review_str.replace('.000000000', '')
+		cur_review_time = datetime.strptime(cur_review_str, '%Y-%m-%d %H:%M:%S')
+		if first_review_time < cur_review_time:
+			first_review_time = cur_review_time
+			first_review.append(dict_of_changes[key])
+	return first_review[len(first_review)-1]
+
+	
 	
 def get_one_change_per_reviewer(overlapping_recs, non_overlapping_recs):
 	chosen_changes_correct = {}
 	chosen_changes_incorrect = {}
 
-	used_keys = []
-
-
-
 	for key in overlapping_recs:
-		print(key, len(overlapping_recs[key]))
 		if len(overlapping_recs[key]) == 1:
 			current_reviewer = overlapping_recs[key]
 			for in_key in current_reviewer.keys():
 				chosen_changes_correct[key] = current_reviewer[in_key]
-				print(current_reviewer[in_key]['recommendations'][0])
-				print(current_reviewer[in_key]["reviewers_name_list"])
-				print()
-				if in_key in used_keys:
-					print("found twice")
-				used_keys.append(in_key)
-
+		else:
+			current_reviewer = overlapping_recs[key]
+			change = get_latest_change(current_reviewer)
+			chosen_changes_correct[key] = change
 
 	for key in non_overlapping_recs:
-		print(key, len(non_overlapping_recs[key]))
 		if len(non_overlapping_recs[key]) == 1:
 			current_reviewer = non_overlapping_recs[key]
 			for in_key in current_reviewer.keys():
 				chosen_changes_incorrect[key] = current_reviewer[in_key]
-				print(current_reviewer[in_key]['recommendations'][0])
-				print(current_reviewer[in_key]["reviewers_name_list"])
-				print()
-				if in_key in used_keys:
-					print("found twice")
-				used_keys.append(in_key)
-	# print(used_keys)
+		else:
+			current_reviewer = non_overlapping_recs[key]
+			change = get_latest_change(current_reviewer)
+			chosen_changes_incorrect[key] = change
+	
+	print(len(chosen_changes_correct.keys()))
+	print(len(chosen_changes_incorrect.keys()))
+			
 
 
 df = pd.read_json('data_with_recommendations.json')

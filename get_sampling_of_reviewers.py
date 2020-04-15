@@ -55,6 +55,7 @@ def get_right_wrong_reviewers(df, reviewers_dict, recommendations_dict):
 		current_line = df.iloc[[i]]
 		current_line_dict = current_line.to_dict('r')[0]
 		current_change_id = current_line_dict['change_id']
+		current_line_dict['recommendations'] = first_choice
 
 		if first_choice in reviewers_names:
 			if first_choice in overlapping_recs.keys():
@@ -170,5 +171,36 @@ for line in chosen_changes_incorrect.keys():
 print(columns_out)
 
 out_df = pd.DataFrame(changes_list, columns = columns_out)
+del out_df['project']
+del out_df["change_id"]
+del out_df['hashtags']
+del out_df['subject']
+del out_df['status']
+del out_df['branch']
+del out_df['updated']
+del out_df['created']
+del out_df['submitted']
+del out_df['submitter']
+del out_df['insertions']
+del out_df['deletions']
+del out_df['total_comment_count']
+del out_df['unresolved_comment_count']
+del out_df['has_review_started']
+del out_df['submission_id']
+del out_df['_number']
+del out_df['owner']
+del out_df['labels']
+del out_df['current_revision']
+del out_df['revisions']
+del out_df['requirements']
+del out_df['comments']
+del out_df['work_in_progress']
+del out_df['revert_of']
+del out_df['topic']
+del out_df['assignee']
+del out_df['submit_type']
+
+
+print(list(out_df.columns))
 
 out_df.to_csv('changes_for_reviewers.csv', index = False, header = True)

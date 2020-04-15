@@ -3,6 +3,7 @@ import csv
 import os
 import pathlib
 import requests
+import random
 import pandas as pd
 from datetime import timedelta, date, datetime
 
@@ -60,6 +61,8 @@ def get_reccomendataion_dictionary(df):
 def get_right_wrong_reviewers(df, reviewers_dict, recommendations_dict):
 	overlapping_recs = {}
 	non_overlapping_recs = {}
+	number_of_reviews_correct = 0
+	number_of_reviews_incorrect = 0
 
 	for i in range(0, len(df['recommendations'])):
 		if type(df['recommendations'][i]) == float:
@@ -75,7 +78,9 @@ def get_right_wrong_reviewers(df, reviewers_dict, recommendations_dict):
 		current_change_id = current_line_dict['change_id']
 		current_line_dict['recommendations'] = first_choice
 
+
 		if first_choice in reviewers_names:
+			number_of_reviews_correct+=1
 			current_line_dict['guess_correct'] = "True"
 			if first_choice in overlapping_recs.keys():
 				overlapping_recs[first_choice][current_change_id] = current_line_dict
@@ -83,6 +88,7 @@ def get_right_wrong_reviewers(df, reviewers_dict, recommendations_dict):
 				overlapping_recs[first_choice] = {}
 				overlapping_recs[first_choice][current_change_id] = current_line_dict
 		else:
+			number_of_reviews_incorrect+=1
 			current_line_dict['guess_correct'] = "False"
 			if first_choice in non_overlapping_recs.keys():
 				non_overlapping_recs[first_choice][current_change_id] = current_line_dict
@@ -91,6 +97,8 @@ def get_right_wrong_reviewers(df, reviewers_dict, recommendations_dict):
 				non_overlapping_recs[first_choice][current_change_id] = current_line_dict
 	print(len(overlapping_recs))
 	print(len(non_overlapping_recs))
+	print('number_of_reviews_correct', number_of_reviews_correct)
+	print('number_of_reviews_incorrect', number_of_reviews_incorrect)
 	return overlapping_recs, non_overlapping_recs
 
 def get_latest_change(dict_of_changes):
@@ -134,8 +142,30 @@ def get_one_change_per_reviewer(overlapping_recs, non_overlapping_recs):
 	print(len(chosen_changes_correct.keys()))
 	print(len(chosen_changes_incorrect.keys()))
 	return chosen_changes_correct, chosen_changes_incorrect
-			
 
+
+def get_changes_for_correct(current_recs, sample_size):
+	all_overlapping_list = []
+	chosen_changes = []
+	current_chosen = 0
+	overall_dict = {}
+	for key in current_recs.keys():
+		current_user_dict = current_recs[key]
+		for in_key in current_user_dict.keys():
+			all_overlapping_list.append(current_user_dict[in_key])
+	while current_chosen < sample_size:
+		current_max = len(all_overlapping_list)
+		random_generated = random.randrange(0, current_max)
+		change_chosen = all_overlapping_list[random_generated]
+		chosen_changes.append(change_chosen)
+		all_overlapping_list.remove(change_chosen)
+		current_chosen+=1
+
+	for change in chosen_changes:
+		inner_key = change['change_id']
+		overall_dict[inner_key] = change
+	return(overall_dict)
+	
 
 df = pd.read_json('data_with_recommendations.json')
 
@@ -149,7 +179,11 @@ recommendations_dict = get_reccomendataion_dictionary(df)
 
 overlapping_recs, non_overlapping_recs = get_right_wrong_reviewers(df, reviewers_dict, recommendations_dict)
 
-chosen_changes_correct, chosen_changes_incorrect = get_one_change_per_reviewer(overlapping_recs, non_overlapping_recs)
+chosen_changes_correct = get_changes_for_correct(overlapping_recs, 198)
+
+chosen_changes_incorrect = get_changes_for_correct(non_overlapping_recs, 233)
+
+# chosen_changes_correct, chosen_changes_incorrect = get_one_change_per_reviewer(overlapping_recs, non_overlapping_recs)
 
 changes_list = []
 

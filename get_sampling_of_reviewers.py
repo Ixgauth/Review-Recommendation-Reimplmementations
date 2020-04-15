@@ -142,6 +142,7 @@ def get_one_change_per_reviewer(overlapping_recs, non_overlapping_recs):
 	
 	print(len(chosen_changes_correct.keys()))
 	print(len(chosen_changes_incorrect.keys()))
+	return chosen_changes_correct, chosen_changes_incorrect
 			
 
 
@@ -155,4 +156,19 @@ recommendations_dict = get_reccomendataion_dictionary(df)
 
 overlapping_recs, non_overlapping_recs = get_right_wrong_reviewers(df, reviewers_dict, recommendations_dict)
 
-get_one_change_per_reviewer(overlapping_recs, non_overlapping_recs)
+chosen_changes_correct, chosen_changes_incorrect = get_one_change_per_reviewer(overlapping_recs, non_overlapping_recs)
+
+changes_list = []
+
+columns_out = []
+
+for line in chosen_changes_correct.keys():
+	columns_out = list(chosen_changes_correct[line].keys())
+	changes_list.append(list(chosen_changes_correct[line].values()))
+for line in chosen_changes_incorrect.keys():
+	changes_list.append(list(chosen_changes_incorrect[line].values()))
+print(columns_out)
+
+out_df = pd.DataFrame(changes_list, columns = columns_out)
+
+out_df.to_csv('changes_for_reviewers.csv', index = False, header = True)

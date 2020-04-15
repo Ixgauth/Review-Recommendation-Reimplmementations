@@ -58,12 +58,14 @@ def get_right_wrong_reviewers(df, reviewers_dict, recommendations_dict):
 		current_line_dict['recommendations'] = first_choice
 
 		if first_choice in reviewers_names:
+			current_line_dict['guess_correct'] = "True"
 			if first_choice in overlapping_recs.keys():
 				overlapping_recs[first_choice][current_change_id] = current_line_dict
 			else:
 				overlapping_recs[first_choice] = {}
 				overlapping_recs[first_choice][current_change_id] = current_line_dict
 		else:
+			current_line_dict['guess_correct'] = "False"
 			if first_choice in non_overlapping_recs.keys():
 				non_overlapping_recs[first_choice][current_change_id] = current_line_dict
 			else:
@@ -168,9 +170,26 @@ for line in chosen_changes_correct.keys():
 	changes_list.append(list(chosen_changes_correct[line].values()))
 for line in chosen_changes_incorrect.keys():
 	changes_list.append(list(chosen_changes_incorrect[line].values()))
-print(columns_out)
 
 out_df = pd.DataFrame(changes_list, columns = columns_out)
+out_df['correct_account_id'] = ''
+out_df['correct_email'] = ''
+print(len(out_df['recommendations']))
+for i in range (0,len(out_df['reviewers_account_id'])):
+	correct_name = out_df['recommendations'][i]
+	current_reviewers = out_df['reviewers_account_id'][i]
+	for rev in current_reviewers:
+		baseURL_REST = "https://gerrit-review.googlesource.com/accounts/" + str(rev)
+		resp = requests.get(baseURL_REST)
+		if resp.status_code == 200:
+			loaded = json.loads(resp.content.decode("utf-8").replace(")]}'",''))
+			if loaded['name'] == correct_name:
+				print(loaded['name'])
+				out_df['correct_account_id'][i] = loaded["_account_id"]
+				out_df['correct_email'][i] = loaded['email']
+		else:
+			print(resp.status_code)
+
 del out_df['project']
 del out_df["change_id"]
 del out_df['hashtags']
@@ -201,6 +220,6 @@ del out_df['assignee']
 del out_df['submit_type']
 
 
-print(list(out_df.columns))
+# print(list(out_df.columns))
 
 out_df.to_csv('changes_for_reviewers.csv', index = False, header = True)

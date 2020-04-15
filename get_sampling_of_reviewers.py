@@ -89,36 +89,6 @@ def get_right_wrong_reviewers(df, reviewers_dict, recommendations_dict):
 			else:
 				non_overlapping_recs[first_choice] = {}
 				non_overlapping_recs[first_choice][current_change_id] = current_line_dict
-
-
-		# for reviewer in reviewers_names:
-		# 	first_choice = recommendations[0]
-		# 	print(type(first_choice))
-		# 	print(type(reviewer))
-		# 	if reviewer in recommendations:
-		# 		if reviewer in overlapping_recs.keys():
-		# 			current_line = df.iloc[[i]]
-		# 			current_line_dict = current_line.to_dict('r')[0]
-		# 			current_change_id = current_line_dict['change_id']
-		# 			overlapping_recs[first_choice][current_change_id] = current_line_dict
-		# 		else:
-		# 			current_line = df.iloc[[i]]
-		# 			current_line_dict = current_line.to_dict('r')[0]
-		# 			current_change_id = current_line_dict['change_id']
-		# 			overlapping_recs[first_choice] = {}
-		# 			overlapping_recs[first_choice][current_change_id] = current_line_dict
-		# 	else:
-		# 		if reviewer in non_overlapping_recs.keys():
-		# 			current_line = df.iloc[[i]]
-		# 			current_line_dict = current_line.to_dict('r')[0]
-		# 			current_change_id = current_line_dict['change_id']
-		# 			non_overlapping_recs[first_choice][current_change_id] = current_line_dict
-		# 		else:
-		# 			current_line = df.iloc[[i]]
-		# 			current_line_dict = current_line.to_dict('r')[0]
-		# 			current_change_id = current_line_dict['change_id']
-		# 			non_overlapping_recs[first_choice] = {}
-		# 			non_overlapping_recs[first_choice][current_change_id] = current_line_dict
 	print(len(overlapping_recs))
 	print(len(non_overlapping_recs))
 	return overlapping_recs, non_overlapping_recs

@@ -6,6 +6,24 @@ import requests
 import pandas as pd
 from datetime import timedelta, date, datetime
 
+def create_user_dictionary(df):
+	user_lookup_dictionary = {}
+	problems = {}
+	for i in range(0, len(df['owner'])):
+		comments = df['comments'][i]
+		if isinstance(comments, dict):
+			for key in comments.keys():
+				single_comment = comments[key]
+				for line in single_comment:
+					name = line['author']['name']
+					account_id = line['author']['_account_id']
+					if name not in user_lookup_dictionary.keys():
+						user_lookup_dictionary[name] = account_id
+					else:
+						if user_lookup_dictionary[name] != account_id:
+							problems[name] = account_id
+	return user_lookup_dictionary
+
 def get_reviewer_dictionary(df):
 	reviewers_dictionary = {}
 
@@ -151,7 +169,9 @@ def get_one_change_per_reviewer(overlapping_recs, non_overlapping_recs):
 
 df = pd.read_json('data_with_recommendations.json')
 
+second_df = pd.read_json('test_data_without_detail.json')
 
+user_lookup_dict = create_user_dictionary(second_df)
 
 reviewers_dict = get_reviewer_dictionary(df)
 
@@ -178,17 +198,35 @@ print(len(out_df['recommendations']))
 for i in range (0,len(out_df['reviewers_account_id'])):
 	correct_name = out_df['recommendations'][i]
 	current_reviewers = out_df['reviewers_account_id'][i]
-	for rev in current_reviewers:
-		baseURL_REST = "https://gerrit-review.googlesource.com/accounts/" + str(rev)
-		resp = requests.get(baseURL_REST)
-		if resp.status_code == 200:
-			loaded = json.loads(resp.content.decode("utf-8").replace(")]}'",''))
-			if loaded['name'] == correct_name:
-				print(loaded['name'])
-				out_df['correct_account_id'][i] = loaded["_account_id"]
-				out_df['correct_email'][i] = loaded['email']
-		else:
-			print(resp.status_code)
+	if str(out_df['guess_correct'][i]) == 'True':
+		for rev in current_reviewers:
+			baseURL_REST = "https://gerrit-review.googlesource.com/accounts/" + str(rev)
+			resp = requests.get(baseURL_REST)
+			if resp.status_code == 200:
+				loaded = json.loads(resp.content.decode("utf-8").replace(")]}'",''))
+				if loaded['name'] == correct_name:
+					print(loaded['name'])
+					out_df['correct_account_id'][i] = loaded["_account_id"]
+					out_df['correct_email'][i] = loaded['email']
+			else:
+				print(resp.status_code)
+	else:
+		if correct_name in user_lookup_dict:
+			print('found them')
+			account_id = user_lookup_dict[correct_name]
+			baseURL_REST = "https://gerrit-review.googlesource.com/accounts/" + str(account_id)
+			resp = requests.get(baseURL_REST)
+			if resp.status_code == 200:
+				loaded = json.loads(resp.content.decode("utf-8").replace(")]}'",''))
+				if loaded['name'] == correct_name:
+					print(loaded['name'])
+					out_df['correct_account_id'][i] = loaded["_account_id"]
+					out_df['correct_email'][i] = loaded['email']
+				else:
+					print("name mixup")
+			else:
+				print(resp.status_code)
+
 
 del out_df['project']
 del out_df["change_id"]

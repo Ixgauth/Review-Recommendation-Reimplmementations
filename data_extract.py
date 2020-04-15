@@ -1,5 +1,6 @@
 import pandas as pd
 import os
+import math
 
 
 def get_files_for_rev(revision):
@@ -33,13 +34,25 @@ def get_system_level_dir(commit):
 		all_files = all_files + get_files_for_rev_system(commit[key])
 	return all_files
 
+def get_all_reviewers(df):
+	number_of_lines_with_revs = 0
+	list_of_reviewers = []
+	for line in df['reviewers_name_list']:
+		if type(line) == list and len(line) > 0:
+			number_of_lines_with_revs += 1
+			for reviewer in line:
+				if reviewer in list_of_reviewers:
+					continue
+				else:
+					list_of_reviewers.append(reviewer)
+		else:
+			print("nothing")
+	return list_of_reviewers, number_of_lines_with_revs
 
-df = pd.read_json('test_data.json')
+df = pd.read_json('test_data_without_detail.json')
 
-for line in df['revisions']:
-	files = get_system_level_dir(line)
-	print(files)
-
-
-# for line in df['comments']:
-# 	print(get_comment_files(line))
+list_of_reviewers, number_of_lines_with_revs = get_all_reviewers(df)
+print(list_of_reviewers)
+print(len(list_of_reviewers))
+print(len(df))
+print(number_of_lines_with_revs)

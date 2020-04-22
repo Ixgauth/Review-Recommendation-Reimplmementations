@@ -144,20 +144,28 @@ def get_one_change_per_reviewer(overlapping_recs, non_overlapping_recs):
 	return chosen_changes_correct, chosen_changes_incorrect
 
 
-def get_changes_for_correct(correct_recs, incorrect_recs, sample_size_correct, sample_size_incorrect):
+def get_changes_for_correct(correct_recs, incorrect_recs, sample_size_correct, sample_size_incorrect, max_for_reviewer):
 	chosen_changes = []
 	current_chosen_correct = 0
 	overall_dict = {}
 
+	chosen_dict = {}
+
 	removed_authors = []
 	all_correct_recs_left = []
 
+	all_incorrect_recs = []
+
 	for key in correct_recs.keys():
-		if len(correct_recs[key]) < 21:
+		if len(correct_recs[key]) < max_for_reviewer:
 			current_user_dict = correct_recs[key]
 			for in_key in current_user_dict.keys():
 				chosen_changes.append(current_user_dict[in_key])
 				current_chosen_correct+=1
+				if key in chosen_dict.keys():
+					chosen_dict[key] += 1
+				else:
+					chosen_dict[key] = 1
 			removed_authors.append(key)
 	
 	for author in removed_authors:
@@ -177,7 +185,6 @@ def get_changes_for_correct(correct_recs, incorrect_recs, sample_size_correct, s
 		for in_key in current_user_dict.keys():
 			all_correct_recs_left.append(current_user_dict[in_key])
 
-	i = 0
 	while current_chosen_correct < sample_size_correct:
 		current_max = len(all_correct_recs_left)
 		random_generated = random.randrange(0, current_max)
@@ -190,8 +197,46 @@ def get_changes_for_correct(correct_recs, incorrect_recs, sample_size_correct, s
 			chosen_changes.append(change_chosen)
 			all_revs_left_max[reviewer] = all_revs_left_max[reviewer]-1
 			current_chosen_correct+=1
-	print(len(chosen_changes))
+			if reviewer in chosen_dict.keys():
+				chosen_dict[reviewer] += 1
+			else:
+				chosen_dict[reviewer] = 1
+		all_correct_recs_left.remove(change_chosen)
+	
+	for key in incorrect_recs.keys():
+		current_user_dict = incorrect_recs[key]
+		for in_key in current_user_dict.keys():
+			all_incorrect_recs.append(current_user_dict[in_key])
 
+	current_chosen_incorrect = 0
+	i = 0
+	while current_chosen_incorrect < sample_size_incorrect:
+		current_max = len(all_incorrect_recs)
+		random_generated = random.randrange(0, current_max)
+		change_chosen = all_incorrect_recs[random_generated]
+		reviewer = change_chosen['recommendations']
+		if reviewer in chosen_dict.keys():
+			number_chosen_reviewer = chosen_dict[reviewer]
+		else:
+			number_chosen_reviewer = 0
+			chosen_dict[reviewer] = 0
+		
+		if number_chosen_reviewer >= max_for_reviewer:
+			continue
+		else:
+			chosen_changes.append(change_chosen)
+			chosen_dict[reviewer] +=1
+			current_chosen_incorrect+=1
+		all_incorrect_recs.remove(change_chosen)
+		i+=1
+		if i > 5000:
+			break
+	print(chosen_dict)
+
+	for change in chosen_changes:
+		inner_key = change['change_id']
+		overall_dict[inner_key] = change
+	return overall_dict
 
 
 def get_changes_for_all(current_recs, sample_size):
@@ -247,95 +292,87 @@ recommendations_dict = get_reccomendataion_dictionary(df)
 
 overlapping_recs, non_overlapping_recs = get_right_wrong_reviewers(df, reviewers_dict, recommendations_dict)
 
-# chosen_changes_correct = get_changes_for_correct(overlapping_recs, 198)
+overall_changes = get_changes_for_correct(overlapping_recs, non_overlapping_recs, 198, 233, 20)
 
-# chosen_changes_incorrect = get_changes_for_correct(non_overlapping_recs, 233)
+changes_list = []
 
-get_changes_for_correct(overlapping_recs, non_overlapping_recs, 198, 233)
+columns_out = []
 
-# overall_changes = get_all_reviews_clear(overlapping_recs, non_overlapping_recs)
+for line in overall_changes.keys():
+	columns_out = list(overall_changes[line].keys())
+	changes_list.append(list(overall_changes[line].values()))
+# for line in chosen_changes_incorrect.keys():
+# 	changes_list.append(list(chosen_changes_incorrect[line].values()))
 
-# # chosen_changes_correct, chosen_changes_incorrect = get_one_change_per_reviewer(overlapping_recs, non_overlapping_recs)
-
-# changes_list = []
-
-# columns_out = []
-
-# for line in overall_changes.keys():
-# 	columns_out = list(overall_changes[line].keys())
-# 	changes_list.append(list(overall_changes[line].values()))
-# # for line in chosen_changes_incorrect.keys():
-# # 	changes_list.append(list(chosen_changes_incorrect[line].values()))
-
-# out_df = pd.DataFrame(changes_list, columns = columns_out)
-# out_df['correct_account_id'] = ''
-# out_df['correct_email'] = ''
-# print(len(out_df['recommendations']))
-# for i in range (0,len(out_df['reviewers_account_id'])):
-# 	correct_name = out_df['recommendations'][i]
-# 	current_reviewers = out_df['reviewers_account_id'][i]
-# 	if str(out_df['guess_correct'][i]) == 'True':
-# 		for rev in current_reviewers:
-# 			baseURL_REST = "https://gerrit-review.googlesource.com/accounts/" + str(rev)
-# 			resp = requests.get(baseURL_REST)
-# 			if resp.status_code == 200:
-# 				loaded = json.loads(resp.content.decode("utf-8").replace(")]}'",''))
-# 				if loaded['name'] == correct_name:
-# 					print(loaded['name'])
-# 					out_df['correct_account_id'][i] = loaded["_account_id"]
-# 					out_df['correct_email'][i] = loaded['email']
-# 			else:
-# 				print(resp.status_code)
-# 	else:
-# 		if correct_name in user_lookup_dict:
-# 			print('found them')
-# 			account_id = user_lookup_dict[correct_name]
-# 			baseURL_REST = "https://gerrit-review.googlesource.com/accounts/" + str(account_id)
-# 			resp = requests.get(baseURL_REST)
-# 			if resp.status_code == 200:
-# 				loaded = json.loads(resp.content.decode("utf-8").replace(")]}'",''))
-# 				if loaded['name'] == correct_name:
-# 					print(loaded['name'])
-# 					out_df['correct_account_id'][i] = loaded["_account_id"]
-# 					out_df['correct_email'][i] = loaded['email']
-# 				else:
-# 					print("name mixup")
-# 			else:
-# 				print(resp.status_code)
+out_df = pd.DataFrame(changes_list, columns = columns_out)
+out_df['correct_account_id'] = ''
+out_df['correct_email'] = ''
+print(len(out_df['recommendations']))
+for i in range (0,len(out_df['reviewers_account_id'])):
+	correct_name = out_df['recommendations'][i]
+	current_reviewers = out_df['reviewers_account_id'][i]
+	if str(out_df['guess_correct'][i]) == 'True':
+		for rev in current_reviewers:
+			baseURL_REST = "https://gerrit-review.googlesource.com/accounts/" + str(rev)
+			resp = requests.get(baseURL_REST)
+			if resp.status_code == 200:
+				loaded = json.loads(resp.content.decode("utf-8").replace(")]}'",''))
+				if loaded['name'] == correct_name:
+					print(loaded['name'])
+					out_df['correct_account_id'][i] = loaded["_account_id"]
+					out_df['correct_email'][i] = loaded['email']
+			else:
+				print(resp.status_code)
+	else:
+		if correct_name in user_lookup_dict:
+			print('found them')
+			account_id = user_lookup_dict[correct_name]
+			baseURL_REST = "https://gerrit-review.googlesource.com/accounts/" + str(account_id)
+			resp = requests.get(baseURL_REST)
+			if resp.status_code == 200:
+				loaded = json.loads(resp.content.decode("utf-8").replace(")]}'",''))
+				if loaded['name'] == correct_name:
+					print(loaded['name'])
+					out_df['correct_account_id'][i] = loaded["_account_id"]
+					out_df['correct_email'][i] = loaded['email']
+				else:
+					print("name mixup")
+			else:
+				print(resp.status_code)
 
 
-# del out_df['project']
-# del out_df["change_id"]
-# del out_df['hashtags']
-# del out_df['subject']
-# del out_df['status']
-# del out_df['branch']
-# del out_df['updated']
-# del out_df['created']
-# del out_df['submitted']
-# del out_df['submitter']
-# del out_df['insertions']
-# del out_df['deletions']
-# del out_df['total_comment_count']
-# del out_df['unresolved_comment_count']
-# del out_df['has_review_started']
-# del out_df['submission_id']
-# del out_df['_number']
-# del out_df['owner']
-# del out_df['labels']
-# del out_df['current_revision']
-# del out_df['revisions']
-# del out_df['requirements']
-# del out_df['comments']
-# del out_df['work_in_progress']
-# del out_df['revert_of']
-# del out_df['topic']
-# del out_df['assignee']
-# del out_df['submit_type']
-# del out_df['reviewers_account_id']
-# del out_df['reviewers_name_list']
+del out_df['project']
+del out_df["change_id"]
+del out_df['hashtags']
+del out_df['subject']
+del out_df['status']
+del out_df['branch']
+del out_df['updated']
+del out_df['created']
+del out_df['submitted']
+del out_df['submitter']
+del out_df['insertions']
+del out_df['deletions']
+del out_df['total_comment_count']
+del out_df['unresolved_comment_count']
+del out_df['has_review_started']
+del out_df['submission_id']
+del out_df['_number']
+del out_df['owner']
+del out_df['labels']
+del out_df['current_revision']
+del out_df['revisions']
+del out_df['requirements']
+del out_df['comments']
+del out_df['work_in_progress']
+del out_df['revert_of']
+del out_df['topic']
+del out_df['assignee']
+del out_df['submit_type']
+del out_df['reviewers_account_id']
+del out_df['reviewers_name_list']
 
-# out_df.sort_values('correct_account_id', inplace=True, ascending=False)
+out_df.sort_values('correct_account_id', inplace=True, ascending=False)
 
 
-# out_df.to_csv('changes_for_reviewers.csv', index = False, header = True)
+out_df.to_csv('changes_for_reviewers.csv', index = False, header = True)

@@ -145,6 +145,10 @@ def get_one_change_per_reviewer(overlapping_recs, non_overlapping_recs):
 
 
 def get_changes_for_correct(current_recs, sample_size):
+	return 
+
+
+def get_changes_for_all(current_recs, sample_size):
 	all_overlapping_list = []
 	chosen_changes = []
 	current_chosen = 0
@@ -165,7 +169,25 @@ def get_changes_for_correct(current_recs, sample_size):
 		inner_key = change['change_id']
 		overall_dict[inner_key] = change
 	return(overall_dict)
-	
+
+def get_all_reviews_clear(correct_recs, incorrect_recs):
+	all_overlapping_list = []
+	overall_dict = {}
+	for key in correct_recs.keys():
+		current_user_dict = correct_recs[key]
+		for in_key in current_user_dict.keys():
+			all_overlapping_list.append(current_user_dict[in_key])
+	for key in incorrect_recs.keys():
+		current_user_dict = incorrect_recs[key]
+		for in_key in current_user_dict.keys():
+			all_overlapping_list.append(current_user_dict[in_key])
+
+	for change in all_overlapping_list:
+		inner_key = change['change_id']
+		overall_dict[inner_key] = change
+	return(overall_dict)
+
+
 
 df = pd.read_json('data_with_recommendations.json')
 
@@ -179,9 +201,11 @@ recommendations_dict = get_reccomendataion_dictionary(df)
 
 overlapping_recs, non_overlapping_recs = get_right_wrong_reviewers(df, reviewers_dict, recommendations_dict)
 
-chosen_changes_correct = get_changes_for_correct(overlapping_recs, 198)
+# chosen_changes_correct = get_changes_for_correct(overlapping_recs, 198)
 
-chosen_changes_incorrect = get_changes_for_correct(non_overlapping_recs, 233)
+# chosen_changes_incorrect = get_changes_for_correct(non_overlapping_recs, 233)
+
+overall_changes = get_all_reviews_clear(overlapping_recs, non_overlapping_recs)
 
 # chosen_changes_correct, chosen_changes_incorrect = get_one_change_per_reviewer(overlapping_recs, non_overlapping_recs)
 
@@ -189,11 +213,11 @@ changes_list = []
 
 columns_out = []
 
-for line in chosen_changes_correct.keys():
-	columns_out = list(chosen_changes_correct[line].keys())
-	changes_list.append(list(chosen_changes_correct[line].values()))
-for line in chosen_changes_incorrect.keys():
-	changes_list.append(list(chosen_changes_incorrect[line].values()))
+for line in overall_changes.keys():
+	columns_out = list(overall_changes[line].keys())
+	changes_list.append(list(overall_changes[line].values()))
+# for line in chosen_changes_incorrect.keys():
+# 	changes_list.append(list(chosen_changes_incorrect[line].values()))
 
 out_df = pd.DataFrame(changes_list, columns = columns_out)
 out_df['correct_account_id'] = ''
@@ -260,8 +284,10 @@ del out_df['revert_of']
 del out_df['topic']
 del out_df['assignee']
 del out_df['submit_type']
+del out_df['reviewers_account_id']
+del out_df['reviewers_name_list']
 
+out_df.sort_values('correct_account_id', inplace=True, ascending=False)
 
-# print(list(out_df.columns))
 
 out_df.to_csv('changes_for_reviewers.csv', index = False, header = True)

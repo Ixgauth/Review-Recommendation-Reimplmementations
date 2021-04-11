@@ -9,6 +9,26 @@ from pathlib import Path
 import requests
 from datetime import timedelta, date, datetime
 
+
+def get_comment_info(single_comment):
+	info = []
+	for line in single_comment:
+		author = line['author']['_account_id']
+		info.append(author)
+	return info
+
+def get_comment_writers(comments):
+	tuple_list = []
+	for key in comments.keys():
+		if key == "/COMMIT_MSG":
+			continue
+
+		comment_info = get_comment_info(comments[key])
+
+		for author in comment_info:
+			tuple_list.append(author)
+	return tuple_list
+
 def get_all_reviewer_candidates(df):
 	candidates = []
 	for line in df['owner']:
@@ -17,6 +37,12 @@ def get_all_reviewer_candidates(df):
 		rever = line['_account_id']
 		if rever not in candidates:
 			candidates.append(rever)
+	for line in df['comments']:
+		if isinstance(line, dict):
+			new_candidates = get_comment_writers(line)
+			for cand in new_candidates:
+				if cand not in candidates:
+					candidates.append(cand)
 	print(candidates)
 
 def get_files_for_rev(revision):

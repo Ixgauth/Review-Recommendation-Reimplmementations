@@ -43,7 +43,7 @@ def get_all_reviewer_candidates(df):
 			for cand in new_candidates:
 				if cand not in candidates:
 					candidates.append(cand)
-	print(candidates)
+	return(candidates)
 
 def get_files_for_rev(revision):
 	file_dictionary = revision['files']
@@ -58,16 +58,51 @@ def get_all_files_for_commit(commit):
 		all_files.extend(get_files_for_rev(commit[key]))
 	return all_files
 
+def get_files_for_each_change(df):
+	files_list = []
+
+	for line in df['revisions']:
+		files = get_all_files_for_commit(line)
+		files_list.append(files)
+
+	df['files'] = files_list
+
+	return df
+
+def get_all_files(df):
+	files_list = []
+	for line in df['files']:
+		for file in line:
+			if file not in files_list:
+				files_list.append(file)
+	return files_list
+
+def get_authors_for_files(df, files_list):
+	file_author_dictionary = {}
+	for file in files_list:
+		cur_file_dictionary = {}
+		total_changes = 0
+		for i in range(0, len(df['files'])):
+			if file in df['files'][i]:
+				owner = df['owner'][i]['_account_id']
+				if owner in cur_file_dictionary.keys():
+					cur_file_dictionary[owner] = cur_file_dictionary[owner] + 1
+				else:
+					cur_file_dictionary[owner] = 1
+				total_changes += 1
+		for author in cur_file_dictionary.keys():
+			total_for_author = cur_file_dictionary[author]
+			cur_file_dictionary[author] = total_for_author / total_changes
+		file_author_dictionary[file] = cur_file_dictionary
+	return file_author_dictionary
+
+
+
+
 df = pd.read_json('test_data.json')
 
-# get_all_reviewer_candidates(df)
+df = get_files_for_each_change(df)
 
-files_list = []
+files_list = get_all_files(df)
 
-for line in df['revisions']:
-	files = get_all_files_for_commit(line)
-	files_list.append(files)
-
-df['files'] = files_list
-
-print(df['files'][8])
+file_to_author_dictionary = get_authors_for_files(df, files_list)

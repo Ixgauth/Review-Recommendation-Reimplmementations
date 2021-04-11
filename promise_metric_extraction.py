@@ -53,11 +53,21 @@ def get_files_for_rev(revision):
 	return files
 
 def get_all_files_for_commit(commit):
-	all_files = {}
+	all_files = []
 	for key in commit.keys():
-		all_files[key] = get_files_for_rev(commit[key])
+		all_files.extend(get_files_for_rev(commit[key]))
 	return all_files
 
 df = pd.read_json('test_data.json')
 
-get_all_reviewer_candidates(df)
+# get_all_reviewer_candidates(df)
+
+files_list = []
+
+for line in df['revisions']:
+	files = get_all_files_for_commit(line)
+	files_list.append(files)
+
+df['files'] = files_list
+
+print(df['files'][8])

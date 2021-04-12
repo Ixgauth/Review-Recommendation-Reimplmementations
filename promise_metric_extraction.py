@@ -151,10 +151,32 @@ def find_last_comments(df, number_of_comments):
 
 	list_of_lines = []
 
+	number_checked = 0
+
+	number_merges = 0
+
+	len_orig_df = len(df['owner'])
+
 	while number_obtained < number_of_comments:
+		number_checked +=1
+		if number_checked == len_orig_df:
+			break
+		elif number_checked % 200 == 0:
+			print(number_checked, '  ', number_obtained)
 		final_line = df.tail(1)
 		line_status = final_line['status'].iloc[0]
-		if line_status == 'MERGED' or line_status == 'ABANDONED':
+		description = final_line['subject'].iloc[0]
+		owner = final_line['owner'].iloc[0]
+		description = description.lower()
+		skip = False
+		if 'merge branch' in description:
+			skip = True
+			# print("MERGE")
+			number_merges+=1
+		if line_status != 'MERGED' and line_status != 'ABANDONED':
+			skip = True
+			# print("NOT DONE")
+		if skip == False:
 			actual_reviewer_list = final_line['reviewers_name_list']
 			if not pd.isnull(actual_reviewer_list).all() and len(actual_reviewer_list) > 0:
 				if len(final_line['reviewers_name_list']) > 0:
@@ -179,10 +201,10 @@ def find_last_comments(df, number_of_comments):
 							number_obtained+=1
 							df_line = final_line.values.tolist()
 							list_of_lines.append(df_line)
-			else:
-				print('no reviewers')
-		else:
-			print('change ongoing')
+		# 	else:
+		# 		print('no reviewers')
+		# else:
+		# 	print('change ongoing or merge')
 
 		df.drop(df.tail(1).index,inplace=True)
 	final_list = []
@@ -190,7 +212,7 @@ def find_last_comments(df, number_of_comments):
 		final_list.append(line[0])
 
 	df_test = pd.DataFrame(final_list, columns = df.columns)
-
+	print(number_merges)
 	return df_test
 
 
@@ -227,6 +249,8 @@ new_df = pd.read_json('test_data_without_detail.json')
 
 print(len(new_df['owner']))
 
-df_tail = find_last_comments(new_df.copy(), 10)
+df_tail = find_last_comments(new_df.copy(), len(new_df['owner']))
 
-df_tail.to_csv('return_trip/test.csv', index = False, header = True)
+print(len(df_tail['owner']))
+
+# df_tail.to_csv('return_trip/test.csv', index = False, header = True)

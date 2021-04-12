@@ -166,16 +166,19 @@ def find_last_comments(df, number_of_comments):
 		final_line = df.tail(1)
 		line_status = final_line['status'].iloc[0]
 		description = final_line['subject'].iloc[0]
-		owner = final_line['owner'].iloc[0]
+		owner = final_line['owner'].iloc[0]['_account_id']
 		description = description.lower()
+		reviewrs = final_line['reviewers_account_id'].iloc[0]
 		skip = False
 		if 'merge branch' in description:
 			skip = True
-			# print("MERGE")
 			number_merges+=1
 		if line_status != 'MERGED' and line_status != 'ABANDONED':
 			skip = True
-			# print("NOT DONE")
+		if type(reviewrs) == list and len(reviewrs) == 1:
+			if owner == reviewrs[0]:
+				skip = True
+				print(reviewrs, '  ', owner)
 		if skip == False:
 			actual_reviewer_list = final_line['reviewers_name_list']
 			if not pd.isnull(actual_reviewer_list).all() and len(actual_reviewer_list) > 0:
@@ -212,7 +215,6 @@ def find_last_comments(df, number_of_comments):
 		final_list.append(line[0])
 
 	df_test = pd.DataFrame(final_list, columns = df.columns)
-	print(number_merges)
 	return df_test
 
 

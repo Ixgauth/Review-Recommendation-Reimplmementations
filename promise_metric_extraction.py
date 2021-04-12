@@ -204,10 +204,6 @@ def find_last_comments(df, number_of_comments):
 							number_obtained+=1
 							df_line = final_line.values.tolist()
 							list_of_lines.append(df_line)
-		# 	else:
-		# 		print('no reviewers')
-		# else:
-		# 	print('change ongoing or merge')
 
 		df.drop(df.tail(1).index,inplace=True)
 	final_list = []
@@ -218,7 +214,31 @@ def find_last_comments(df, number_of_comments):
 	return df_test
 
 
-new_df = pd.read_json('test_data_without_detail.json')
+def compute_metrics(df, change_df):
+	files_list = get_all_files(change_df)
+
+	print(files_list)
+	file_author_dict = get_authors_for_files(df, files_list)
+
+	code_ownership_metric_dict = {}
+	total_number_files = len(file_author_dict.keys())
+	for key in file_author_dict.keys():
+		response = file_author_dict[key]
+		for kye in response.keys():
+			if kye in code_ownership_metric_dict:
+				code_ownership_metric_dict[kye] = code_ownership_metric_dict[kye] + response[kye] / total_number_files
+			else:
+				code_ownership_metric_dict[kye] = response[kye] / total_number_files
+
+	total = 0
+	for key in code_ownership_metric_dict.keys():
+		total += code_ownership_metric_dict[key]
+
+	print(total)
+
+
+
+df = pd.read_json('return_trip/data_cleaned_for_promise.json')
 
 # list_of_lines = []
 
@@ -240,19 +260,16 @@ new_df = pd.read_json('test_data_without_detail.json')
 
 # df = get_files_for_each_change(df)
 
-# files_list = get_all_files(df)
 
-# file_to_author_dictionary = get_authors_for_files(df, files_list)
+# df = find_last_comments(new_df.copy(), len(new_df['owner']))
 
-# file_to_reviewers_dict = get_reviewers_for_files(df, files_list)
 
-# for line in file_to_reviewers_dict.keys():
-# 	print(line, '  ', file_to_reviewers_dict[line])
+get_files_for_each_change(df)
 
-print(len(new_df['owner']))
+for i in range(0,3):
+	df_tail = find_last_comments(df, 1)
 
-df_tail = find_last_comments(new_df.copy(), len(new_df['owner']))
+	print(len(df))
 
-print(len(df_tail['owner']))
+	compute_metrics(df, df_tail)
 
-# df_tail.to_csv('return_trip/test.csv', index = False, header = True)

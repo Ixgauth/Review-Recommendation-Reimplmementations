@@ -60,11 +60,14 @@ def get_all_files_for_commit(commit):
 
 def get_files_for_each_change(df):
 	files_list = []
+	# print(df['owner'][0])
 
 	for line in df['revisions']:
+		print(line)
 		files = get_all_files_for_commit(line)
 		files_list.append(files)
 
+	# print(files_list)
 	df['files'] = files_list
 
 	return df
@@ -96,13 +99,42 @@ def get_authors_for_files(df, files_list):
 		file_author_dictionary[file] = cur_file_dictionary
 	return file_author_dictionary
 
+def get_reviewers_for_files(df, files_list):
+	file_reviewers_dictionary = {}
+	for file in files_list:
+		cur_file_dictionary = {}
+		total_reviewers = 0
+		for i in range(0, len(df['files'])):
+			if file in df['files'][i]:
+				continue
 
 
 
-df = pd.read_json('test_data.json')
+
+new_df = pd.read_json('test_data_without_detail.json')
+
+list_of_lines = []
+
+for i in range(0, 30):
+	final_line = new_df.tail(1)
+	df_line = final_line.values.tolist()
+	list_of_lines.append(df_line)
+	new_df.drop(new_df.tail(1).index,inplace=True)
+
+
+final_list = []
+for line in list_of_lines:
+	final_list.append(line[0])
+
+df = pd.DataFrame(final_list, columns = new_df.columns)
+
+df.reset_index(inplace = True)
+
 
 df = get_files_for_each_change(df)
 
 files_list = get_all_files(df)
 
 file_to_author_dictionary = get_authors_for_files(df, files_list)
+
+print(df.columns)

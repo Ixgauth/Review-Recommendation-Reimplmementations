@@ -83,7 +83,7 @@ recommendations_dict = get_reccomendataion_dictionary(df)
 
 single_recs = get_single_rec_dictionary(df)
 
-output_df = pd.read_csv('changes_for_reviewers_ind_1.csv')
+output_df = pd.read_csv('Final_List_Of_Changes.csv')
 
 number_recs_list = []
 
@@ -146,5 +146,5 @@ for i in range(0, len(output_df['id'])):
 print(number_found)
 
 output_df['total number of reviews performed'] = total_reviews_list
-output_df['number of times recommended'] = number_recs_list
-output_df.to_csv('changes_for_reviewers_ind_2.csv', index = False, header = True)
+# output_df['number of times recommended'] = number_recs_list
+output_df.to_csv('Final_List_Of_Changes_out.csv', index = False, header = True)

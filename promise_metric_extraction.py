@@ -63,7 +63,6 @@ def get_files_for_each_change(df):
 	# print(df['owner'][0])
 
 	for line in df['revisions']:
-		print(line)
 		files = get_all_files_for_commit(line)
 		files_list.append(files)
 
@@ -103,10 +102,23 @@ def get_reviewers_for_files(df, files_list):
 	file_reviewers_dictionary = {}
 	for file in files_list:
 		cur_file_dictionary = {}
-		total_reviewers = 0
+		total_changes = 0
 		for i in range(0, len(df['files'])):
 			if file in df['files'][i]:
-				continue
+				reviewers = df['reviewers_account_id'][i]
+				if type(reviewers) == float:
+					continue
+				for rever in reviewers: 
+					if rever in cur_file_dictionary.keys():
+						cur_file_dictionary[rever] = cur_file_dictionary[rever] + 1/len(reviewers)
+					else:
+						cur_file_dictionary[rever] = 1/len(reviewers)
+				total_changes += 1
+		for rever in cur_file_dictionary.keys():
+			total_for_rever = cur_file_dictionary[rever]
+			cur_file_dictionary[rever] = total_for_rever / total_changes
+		file_reviewers_dictionary[file] = cur_file_dictionary
+	return file_reviewers_dictionary
 
 
 
@@ -137,4 +149,7 @@ files_list = get_all_files(df)
 
 file_to_author_dictionary = get_authors_for_files(df, files_list)
 
-print(df.columns)
+file_to_reviewers_dict = get_reviewers_for_files(df, files_list)
+
+for line in file_to_reviewers_dict.keys():
+	print(line, '  ', file_to_reviewers_dict[line])

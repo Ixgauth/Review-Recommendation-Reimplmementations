@@ -58,6 +58,12 @@ def get_all_files_for_commit(commit):
 		all_files.extend(get_files_for_rev(commit[key]))
 	return all_files
 
+def get_files_commit_old(commit):
+	all_files = {}
+	for key in commit.keys():
+		all_files[key] = get_files_for_rev(commit[key])
+	return all_files
+
 def get_files_for_each_change(df):
 	files_list = []
 	# print(df['owner'][0])
@@ -120,36 +126,107 @@ def get_reviewers_for_files(df, files_list):
 		file_reviewers_dictionary[file] = cur_file_dictionary
 	return file_reviewers_dictionary
 
+def get_author_familiarity_dict(df):
+	author_familiarity_dict = {}
+	for i in range(0, len(df['owner'])):
+		current_familiarity_dict = {}
+		author = line['_account_id'][i]
+		if author in author_familiarity_dict.keys():
+			current_familiarity_dict = author_familiarity_dict[author]
+		reviewers = df['reviewers_account_id'][i]
+		if type(reviewers) == float:
+				continue
+		for rever in reviewers:
+			if rever in current_familiarity_dict:
+				current_familiarity_dict[rever] = current_familiarity_dict[rever] + 1
+			else:
+				current_familiarity_dict[rever] = 1
+		author_familiarity_dict[author] = current_familiarity_dict
+	return author_familiarity_dict
 
+def find_last_comments(df, number_of_comments):
+	number_obtained = 0
+
+	list_of_reviewers = []
+
+	list_of_lines = []
+
+	while number_obtained < number_of_comments:
+		final_line = df.tail(1)
+		line_status = final_line['status'].iloc[0]
+		if line_status == 'MERGED' or line_status == 'ABANDONED':
+			actual_reviewer_list = final_line['reviewers_name_list']
+			if not pd.isnull(actual_reviewer_list).all() and len(actual_reviewer_list) > 0:
+				if len(final_line['reviewers_name_list']) > 0:
+					revisions = final_line['revisions']
+					revs_dict = revisions.to_dict()
+					found_a_file = False
+					for key in revs_dict.keys():
+						rev = revs_dict[key]
+						files_in_change = get_files_commit_old(rev)
+						for kye in files_in_change.keys():
+							if len(files_in_change[kye]) != 0:
+								found_a_file = True
+							else: 
+								continue
+					if found_a_file == False:
+						print('no files')
+					else:
+						reviewers = final_line['reviewers_name_list'].to_list()[0]
+						if not reviewers:
+							print(reviewers)
+						else:
+							number_obtained+=1
+							df_line = final_line.values.tolist()
+							list_of_lines.append(df_line)
+			else:
+				print('no reviewers')
+		else:
+			print('change ongoing')
+
+		df.drop(df.tail(1).index,inplace=True)
+	final_list = []
+	for line in list_of_lines:
+		final_list.append(line[0])
+
+	df_test = pd.DataFrame(final_list, columns = df.columns)
+
+	return df_test
 
 
 new_df = pd.read_json('test_data_without_detail.json')
 
-list_of_lines = []
+# list_of_lines = []
 
-for i in range(0, 30):
-	final_line = new_df.tail(1)
-	df_line = final_line.values.tolist()
-	list_of_lines.append(df_line)
-	new_df.drop(new_df.tail(1).index,inplace=True)
-
-
-final_list = []
-for line in list_of_lines:
-	final_list.append(line[0])
-
-df = pd.DataFrame(final_list, columns = new_df.columns)
-
-df.reset_index(inplace = True)
+# for i in range(0, 30):
+# 	final_line = new_df.tail(1)
+# 	df_line = final_line.values.tolist()
+# 	list_of_lines.append(df_line)
+# 	new_df.drop(new_df.tail(1).index,inplace=True)
 
 
-df = get_files_for_each_change(df)
+# final_list = []
+# for line in list_of_lines:
+# 	final_list.append(line[0])
 
-files_list = get_all_files(df)
+# df = pd.DataFrame(final_list, columns = new_df.columns)
 
-file_to_author_dictionary = get_authors_for_files(df, files_list)
+# df.reset_index(inplace = True)
 
-file_to_reviewers_dict = get_reviewers_for_files(df, files_list)
 
-for line in file_to_reviewers_dict.keys():
-	print(line, '  ', file_to_reviewers_dict[line])
+# df = get_files_for_each_change(df)
+
+# files_list = get_all_files(df)
+
+# file_to_author_dictionary = get_authors_for_files(df, files_list)
+
+# file_to_reviewers_dict = get_reviewers_for_files(df, files_list)
+
+# for line in file_to_reviewers_dict.keys():
+# 	print(line, '  ', file_to_reviewers_dict[line])
+
+print(len(new_df['owner']))
+
+df_tail = find_last_comments(new_df.copy(), 10)
+
+df_tail.to_csv('return_trip/test.csv', index = False, header = True)

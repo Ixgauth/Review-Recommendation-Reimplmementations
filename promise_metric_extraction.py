@@ -126,22 +126,24 @@ def get_reviewers_for_files(df, files_list):
 		file_reviewers_dictionary[file] = cur_file_dictionary
 	return file_reviewers_dictionary
 
-def get_author_familiarity_dict(df):
+def get_author_familiarity_dict(df, author):
 	author_familiarity_dict = {}
+	total = 0
 	for i in range(0, len(df['owner'])):
-		current_familiarity_dict = {}
-		author = line['_account_id'][i]
-		if author in author_familiarity_dict.keys():
-			current_familiarity_dict = author_familiarity_dict[author]
-		reviewers = df['reviewers_account_id'][i]
-		if type(reviewers) == float:
-				continue
-		for rever in reviewers:
-			if rever in current_familiarity_dict:
-				current_familiarity_dict[rever] = current_familiarity_dict[rever] + 1
-			else:
-				current_familiarity_dict[rever] = 1
-		author_familiarity_dict[author] = current_familiarity_dict
+		cur_author =  df['owner'][i]['_account_id']
+		if cur_author == author:
+			reviewers = df['reviewers_account_id'][i]
+			if type(reviewers) == float:
+					continue
+			for rever in reviewers:
+				if rever in author_familiarity_dict.keys():
+					author_familiarity_dict[rever] = author_familiarity_dict[rever] + 1
+					total +=1
+				else:
+					author_familiarity_dict[rever] = 1
+					total +=1
+	for key in author_familiarity_dict.keys():
+		author_familiarity_dict[key] = author_familiarity_dict[key] / total
 	return author_familiarity_dict
 
 def find_last_comments(df, number_of_comments):
@@ -249,6 +251,17 @@ def compute_metrics(df, change_df):
 					metrics_reached_dictionary[kye] = 1
 				else:
 					metrics_reached_dictionary[kye] = metrics_reached_dictionary[kye] + 1
+
+
+	print(change_df['owner'][0]['_account_id'])
+	reviewer_familiarity_matric = get_author_familiarity_dict(df, change_df['owner'][0]['_account_id'])
+
+	for key in reviewer_familiarity_matric.keys():
+		if key not in metrics_reached_dictionary.keys():
+			metrics_reached_dictionary[key] = 1
+		else:
+			metrics_reached_dictionary[key] = metrics_reached_dictionary[key] + 1
+	print(metrics_reached_dictionary)
 
 
 

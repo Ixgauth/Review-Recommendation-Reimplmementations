@@ -164,6 +164,46 @@ def get_participation_rate(df, candidate):
 	particpation_rate = total_participated / total_requested
 	return particpation_rate
 
+def get_remaining_reviews(df, candidate, change_time):
+	remaining_reviews = 0
+	for i in range(0, len(df['owner'])):
+		actual_revs = df['reviewers_account_id'][i]
+		assigned_revs = df['assigned_reviewer_account_id'][i]
+		if candidate in actual_revs or candidate in assigned_revs:
+			if df['status'][i] == 'MERGED':
+				created_str = df['created'][i]
+				if type(created_str) != str:
+					print('not string')
+					continue
+				created_str = created_str.replace('.000000000', '')
+				created_time = datetime.strptime(created_str, '%Y-%m-%d %H:%M:%S')
+				submitted_str = df['submitted'][i]
+				if type(submitted_str) != str:
+					print('not string')
+					continue
+				submitted_str = submitted_str.replace('.000000000', '')
+				submitted_time = datetime.strptime(submitted_str, '%Y-%m-%d %H:%M:%S')
+
+				if created_time < change_time and submitted_time > change_time:
+					remaining_reviews += 1
+			elif df['status'][i] == 'ABANDONED':
+				created_str = df['created'][i]
+				if type(created_str) != str:
+					print('not string')
+					continue
+				created_str = created_str.replace('.000000000', '')
+				created_time = datetime.strptime(created_str, '%Y-%m-%d %H:%M:%S')
+				updated_str = df['updated'][i]
+				if type(updated_str) != str:
+					print('not string')
+					continue
+				updated_str = updated_str.replace('.000000000', '')
+				updated_time = datetime.strptime(updated_str, '%Y-%m-%d %H:%M:%S')
+
+				if created_time < change_time and updated_time > change_time:
+					remaining_reviews += 1
+	return remaining_reviews
+
 
 def find_last_comments(df, number_of_comments):
 	number_obtained = 0
@@ -291,6 +331,21 @@ def compute_metrics(df, change_df):
 		else:
 			participation_rate_dictionary[key] = p_rate
 			metrics_reached_dictionary[key] = metrics_reached_dictionary[key] + 1
+
+	change_time_str = change_df['created'][0]
+	change_time_str = change_time_str.replace('.000000000', '')
+	change_time_date = datetime.strptime(change_time_str, '%Y-%m-%d %H:%M:%S')
+
+	remaining_reviews_dictionary = {}
+	
+	for key in metrics_reached_dictionary:
+		if metrics_reached_dictionary[key] > 1:
+			rem_revs = get_remaining_reviews(df, key, change_time_date)
+			remaining_reviews_dictionary[key] = rem_revs
+			if rem_revs != 0:
+				metrics_reached_dictionary[key] = metrics_reached_dictionary[key] + 1
+	print(remaining_reviews_dictionary)
+	print(metrics_reached_dictionary)
 	# print(participation_rate_dictionary)
 	# print(metrics_reached_dictionary)
 
@@ -327,7 +382,7 @@ df = pd.read_json('return_trip/data_cleaned_for_promise.json')
 
 get_files_for_each_change(df)
 
-for i in range(0,30):
+for i in range(0,3):
 	df_tail = find_last_comments(df, 1)
 
 	print(len(df))

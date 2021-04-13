@@ -180,7 +180,7 @@ def find_last_comments(df, number_of_comments):
 				skip = True
 				print(reviewrs, '  ', owner)
 		if skip == False:
-			actual_reviewer_list = final_line['reviewers_name_list']
+			actual_reviewer_list = final_line['reviewers_account_id']
 			if not pd.isnull(actual_reviewer_list).all() and len(actual_reviewer_list) > 0:
 				if len(final_line['reviewers_name_list']) > 0:
 					revisions = final_line['revisions']
@@ -197,7 +197,7 @@ def find_last_comments(df, number_of_comments):
 					if found_a_file == False:
 						print('no files')
 					else:
-						reviewers = final_line['reviewers_name_list'].to_list()[0]
+						reviewers = final_line['reviewers_account_id'].to_list()[0]
 						if not reviewers:
 							print(reviewers)
 						else:
@@ -217,8 +217,9 @@ def find_last_comments(df, number_of_comments):
 def compute_metrics(df, change_df):
 	files_list = get_all_files(change_df)
 
-	print(files_list)
 	file_author_dict = get_authors_for_files(df, files_list)
+
+	metrics_reached_dictionary = {}
 
 	code_ownership_metric_dict = {}
 	total_number_files = len(file_author_dict.keys())
@@ -229,12 +230,26 @@ def compute_metrics(df, change_df):
 				code_ownership_metric_dict[kye] = code_ownership_metric_dict[kye] + response[kye] / total_number_files
 			else:
 				code_ownership_metric_dict[kye] = response[kye] / total_number_files
+				if kye not in metrics_reached_dictionary.keys():
+					metrics_reached_dictionary[kye] = 1
+				else:
+					metrics_reached_dictionary[kye] = metrics_reached_dictionary[kye] + 1
 
-	total = 0
-	for key in code_ownership_metric_dict.keys():
-		total += code_ownership_metric_dict[key]
+	reviewer_author_dictionary = get_reviewers_for_files(df, files_list)
 
-	print(total)
+	reviewing_experience_metric = {}
+	for key in reviewer_author_dictionary.keys():
+		response = reviewer_author_dictionary[key]
+		for kye in response.keys():
+			if kye in reviewing_experience_metric.keys():
+				reviewing_experience_metric[kye] = reviewing_experience_metric[kye] + response[kye] / total_number_files
+			else:
+				reviewing_experience_metric[kye] = response[kye] / total_number_files
+				if kye not in metrics_reached_dictionary.keys():
+					metrics_reached_dictionary[kye] = 1
+				else:
+					metrics_reached_dictionary[kye] = metrics_reached_dictionary[kye] + 1
+
 
 
 
@@ -262,6 +277,9 @@ df = pd.read_json('return_trip/data_cleaned_for_promise.json')
 
 
 # df = find_last_comments(new_df.copy(), len(new_df['owner']))
+
+# with open('data_cleaned_for_promise.json', 'w') as f:
+#     f.write(df.to_json())
 
 
 get_files_for_each_change(df)

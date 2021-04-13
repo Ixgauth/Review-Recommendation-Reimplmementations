@@ -8,8 +8,8 @@ def get_dates(start_date, end_date):
 	for n in range(int ((end_date - start_date).days)):
 		yield start_date + timedelta(n)
 
-start_date = date(2018, 1, 2)
-end_date = date(2018, 1, 5)
+start_date = date(2018, 1, 1)
+end_date = date(2020, 1, 1)
 json_list = []
 for single_date in get_dates(start_date, end_date):
 	print(single_date.strftime("%Y-%m-%d"))
@@ -31,23 +31,18 @@ for single_date in get_dates(start_date, end_date):
 
 # outfile = open("some_crap.json", "w")
 
-
+i = 0
 for line in json_list:
+	if i % 100 == 0:
+		print(i)
+	i+=1
 	change_id = line["change_id"]
 	strng = "CHANGE ID: " + change_id
 	baseURL = f"https://gerrit-review.googlesource.com/changes/{change_id}/comments"
 	resp = requests.get(baseURL)
 	if(resp.status_code == 200):
 		line["comments"] = json.loads(resp.content.decode("utf-8").replace(")]}'",''))
-	change_id = line["change_id"]
-	baseURL = f"https://gerrit-review.googlesource.com/changes/{change_id}/detail"
-	resp = requests.get(baseURL)
-	if(resp.status_code == 200):
-		line['details'] = json.loads(resp.content.decode("utf-8").replace(")]}'",''))
-
-		# for key in line['details'].keys():
-		# 	print(key, '  ',line['details'][key])
-		reviewers_qued = line['details']['reviewers']
+		reviewers_qued = line['reviewers']
 		reviewers_list = reviewers_qued['REVIEWER']
 		account_id_list = []
 		assigned_account_id_list = []
@@ -79,15 +74,27 @@ for line in json_list:
 				continue
 
 			assigned_account_id_list.append(lne['_account_id'])
-			assigned_reviewer_name_list.append(lne['name'])
+		if 'CC' in reviewers_qued.keys():
+			reviewers_list = reviewers_qued['CC']
+			for lne in reviewers_list:
+				if '_account_id' not in lne.keys():
+					continue
+				if lne['_account_id'] == owner_id:
+					continue
+				if lne['_account_id'] == 1022687:
+					continue
+				if lne['_account_id'] in assigned_account_id_list:
+					continue
+				assigned_account_id_list.append(lne['_account_id'])
 		line['reviewers_account_id'] = account_id_list
 		line['reviewers_name_list'] = reviewer_name_list
+		line['assigned_reviewer_account_id'] = assigned_account_id_list
 
 
-new_df = pd.DataFrame(json_list)
-new_df.to_csv('test_data_with_comments.csv', index = False, header = True)
+# new_df = pd.DataFrame(json_list)
+# new_df.to_csv('test_data_with_comments.csv', index = False, header = True)
 
-outfile = open("test_data_with_comments.json", "w")
+outfile = open("promise_data_unclean.json", "w")
 outfile.write(json.dumps(json_list))
 
 # print(json_list[0]["comments"])

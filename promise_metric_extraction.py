@@ -136,6 +136,8 @@ def get_author_familiarity_dict(df, author):
 			if type(reviewers) == float:
 					continue
 			for rever in reviewers:
+				if rever == author:
+					continue
 				if rever in author_familiarity_dict.keys():
 					author_familiarity_dict[rever] = author_familiarity_dict[rever] + 1
 					total +=1
@@ -145,6 +147,23 @@ def get_author_familiarity_dict(df, author):
 	for key in author_familiarity_dict.keys():
 		author_familiarity_dict[key] = author_familiarity_dict[key] / total
 	return author_familiarity_dict
+
+def get_participation_rate(df, candidate):
+	total_requested = 0
+	total_participated = 0
+
+	for i in range(0, len(df['owner'])):
+		actual_revs = df['reviewers_account_id'][i]
+		assigned_revs = df['assigned_reviewer_account_id'][i]
+		if candidate in actual_revs or candidate in assigned_revs:
+			total_requested += 1
+		if candidate in actual_revs:
+			total_participated += 1
+	if total_requested == 0:
+		return 0
+	particpation_rate = total_participated / total_requested
+	return particpation_rate
+
 
 def find_last_comments(df, number_of_comments):
 	number_obtained = 0
@@ -253,16 +272,27 @@ def compute_metrics(df, change_df):
 					metrics_reached_dictionary[kye] = metrics_reached_dictionary[kye] + 1
 
 
-	print(change_df['owner'][0]['_account_id'])
+	# print(change_df['owner'][0]['_account_id'])
 	reviewer_familiarity_matric = get_author_familiarity_dict(df, change_df['owner'][0]['_account_id'])
+
 
 	for key in reviewer_familiarity_matric.keys():
 		if key not in metrics_reached_dictionary.keys():
 			metrics_reached_dictionary[key] = 1
 		else:
 			metrics_reached_dictionary[key] = metrics_reached_dictionary[key] + 1
-	print(metrics_reached_dictionary)
+	
+	participation_rate_dictionary = {}
 
+	for key in metrics_reached_dictionary:
+		p_rate = get_participation_rate(df, key)
+		if p_rate == 0:
+			participation_rate_dictionary[key] = 0
+		else:
+			participation_rate_dictionary[key] = p_rate
+			metrics_reached_dictionary[key] = metrics_reached_dictionary[key] + 1
+	# print(participation_rate_dictionary)
+	# print(metrics_reached_dictionary)
 
 
 
@@ -289,15 +319,15 @@ df = pd.read_json('return_trip/data_cleaned_for_promise.json')
 # df = get_files_for_each_change(df)
 
 
-# df = find_last_comments(new_df.copy(), len(new_df['owner']))
+# new_df = find_last_comments(df.copy(), len(df['owner']))
 
-# with open('data_cleaned_for_promise.json', 'w') as f:
-#     f.write(df.to_json())
+# with open('return_trip/data_cleaned_for_promise.json', 'w') as f:
+#     f.write(new_df.to_json())
 
 
 get_files_for_each_change(df)
 
-for i in range(0,3):
+for i in range(0,30):
 	df_tail = find_last_comments(df, 1)
 
 	print(len(df))

@@ -173,13 +173,11 @@ def get_remaining_reviews(df, candidate, change_time):
 			if df['status'][i] == 'MERGED':
 				created_str = df['created'][i]
 				if type(created_str) != str:
-					print('not string')
 					continue
 				created_str = created_str.replace('.000000000', '')
 				created_time = datetime.strptime(created_str, '%Y-%m-%d %H:%M:%S')
 				submitted_str = df['submitted'][i]
 				if type(submitted_str) != str:
-					print('not string')
 					continue
 				submitted_str = submitted_str.replace('.000000000', '')
 				submitted_time = datetime.strptime(submitted_str, '%Y-%m-%d %H:%M:%S')
@@ -189,13 +187,11 @@ def get_remaining_reviews(df, candidate, change_time):
 			elif df['status'][i] == 'ABANDONED':
 				created_str = df['created'][i]
 				if type(created_str) != str:
-					print('not string')
 					continue
 				created_str = created_str.replace('.000000000', '')
 				created_time = datetime.strptime(created_str, '%Y-%m-%d %H:%M:%S')
 				updated_str = df['updated'][i]
 				if type(updated_str) != str:
-					print('not string')
 					continue
 				updated_str = updated_str.replace('.000000000', '')
 				updated_time = datetime.strptime(updated_str, '%Y-%m-%d %H:%M:%S')
@@ -337,18 +333,41 @@ def compute_metrics(df, change_df):
 	change_time_date = datetime.strptime(change_time_str, '%Y-%m-%d %H:%M:%S')
 
 	remaining_reviews_dictionary = {}
-	
+
 	for key in metrics_reached_dictionary:
 		if metrics_reached_dictionary[key] > 1:
 			rem_revs = get_remaining_reviews(df, key, change_time_date)
 			remaining_reviews_dictionary[key] = rem_revs
 			if rem_revs != 0:
 				metrics_reached_dictionary[key] = metrics_reached_dictionary[key] + 1
-	print(remaining_reviews_dictionary)
-	print(metrics_reached_dictionary)
-	# print(participation_rate_dictionary)
-	# print(metrics_reached_dictionary)
+	
+	final_metrics_dictionary = {}
 
+	for key in metrics_reached_dictionary:
+		if metrics_reached_dictionary[key] > 2:
+			current_reviewer_metrics = []
+			if key in code_ownership_metric_dict.keys():
+				current_reviewer_metrics.append(code_ownership_metric_dict[key])
+			else:
+				current_reviewer_metrics.append(0)
+			if key in reviewing_experience_metric.keys():
+				current_reviewer_metrics.append(reviewing_experience_metric[key])
+			else:
+				current_reviewer_metrics.append(0)
+			if key in reviewer_familiarity_matric.keys():
+				current_reviewer_metrics.append(reviewer_familiarity_matric[key])
+			else:
+				current_reviewer_metrics.append(0)
+			if key in participation_rate_dictionary.keys():
+				current_reviewer_metrics.append(participation_rate_dictionary[key])
+			else:
+				current_reviewer_metrics.append(0)
+			if key in remaining_reviews_dictionary.keys():
+				current_reviewer_metrics.append(remaining_reviews_dictionary[key])
+			else:
+				current_reviewer_metrics.append(0)
+			final_metrics_dictionary[key] = current_reviewer_metrics
+	print(final_metrics_dictionary)
 
 
 df = pd.read_json('return_trip/data_cleaned_for_promise.json')
@@ -381,6 +400,12 @@ df = pd.read_json('return_trip/data_cleaned_for_promise.json')
 
 
 get_files_for_each_change(df)
+
+total_changes = len(df['owner'])
+
+test_size = int(total_changes*.1)
+
+print(test_size)
 
 for i in range(0,3):
 	df_tail = find_last_comments(df, 1)

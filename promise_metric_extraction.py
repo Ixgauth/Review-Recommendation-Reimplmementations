@@ -85,7 +85,7 @@ def get_all_files(df):
 				files_list.append(file)
 	return files_list
 
-def get_authors_for_files(df, files_list):
+def get_authors_for_files(df, files_list, change_owner):
 	file_author_dictionary = {}
 	for file in files_list:
 		cur_file_dictionary = {}
@@ -93,6 +93,8 @@ def get_authors_for_files(df, files_list):
 		for i in range(0, len(df['files'])):
 			if file in df['files'][i]:
 				owner = df['owner'][i]['_account_id']
+				if owner == change_owner:
+					continue
 				if owner in cur_file_dictionary.keys():
 					cur_file_dictionary[owner] = cur_file_dictionary[owner] + 1
 				else:
@@ -104,7 +106,7 @@ def get_authors_for_files(df, files_list):
 		file_author_dictionary[file] = cur_file_dictionary
 	return file_author_dictionary
 
-def get_reviewers_for_files(df, files_list):
+def get_reviewers_for_files(df, files_list, change_owner):
 	file_reviewers_dictionary = {}
 	for file in files_list:
 		cur_file_dictionary = {}
@@ -115,7 +117,9 @@ def get_reviewers_for_files(df, files_list):
 				if type(reviewers) == float:
 					continue
 				for rever in reviewers: 
-					if rever in cur_file_dictionary.keys():
+					if rever == change_owner:
+						continue
+					elif rever in cur_file_dictionary.keys():
 						cur_file_dictionary[rever] = cur_file_dictionary[rever] + 1/len(reviewers)
 					else:
 						cur_file_dictionary[rever] = 1/len(reviewers)
@@ -274,7 +278,7 @@ def find_last_comments(df, number_of_comments):
 def compute_metrics(df, change_df):
 	files_list = get_all_files(change_df)
 
-	file_author_dict = get_authors_for_files(df, files_list)
+	file_author_dict = get_authors_for_files(df, files_list, change_df['owner'][0]['_account_id'])
 
 	metrics_reached_dictionary = {}
 
@@ -292,7 +296,7 @@ def compute_metrics(df, change_df):
 				else:
 					metrics_reached_dictionary[kye] = metrics_reached_dictionary[kye] + 1
 
-	reviewer_author_dictionary = get_reviewers_for_files(df, files_list)
+	reviewer_author_dictionary = get_reviewers_for_files(df, files_list, change_df['owner'][0]['_account_id'])
 
 	reviewing_experience_metric = {}
 	for key in reviewer_author_dictionary.keys():
@@ -321,6 +325,8 @@ def compute_metrics(df, change_df):
 	participation_rate_dictionary = {}
 
 	for key in metrics_reached_dictionary:
+		if key == change_df['owner'][0]['_account_id']:
+			continue
 		p_rate = get_participation_rate(df, key)
 		if p_rate == 0:
 			participation_rate_dictionary[key] = 0
@@ -335,6 +341,8 @@ def compute_metrics(df, change_df):
 	remaining_reviews_dictionary = {}
 
 	for key in metrics_reached_dictionary:
+		if key == change_df['owner'][0]['_account_id']:
+			continue
 		if metrics_reached_dictionary[key] > 1:
 			rem_revs = get_remaining_reviews(df, key, change_time_date)
 			remaining_reviews_dictionary[key] = rem_revs
@@ -349,25 +357,25 @@ def compute_metrics(df, change_df):
 			if key in code_ownership_metric_dict.keys():
 				current_reviewer_metrics.append(code_ownership_metric_dict[key])
 			else:
-				current_reviewer_metrics.append(0)
+				current_reviewer_metrics.append(0.0)
 			if key in reviewing_experience_metric.keys():
 				current_reviewer_metrics.append(reviewing_experience_metric[key])
 			else:
-				current_reviewer_metrics.append(0)
+				current_reviewer_metrics.append(0.0)
 			if key in reviewer_familiarity_matric.keys():
 				current_reviewer_metrics.append(reviewer_familiarity_matric[key])
 			else:
-				current_reviewer_metrics.append(0)
+				current_reviewer_metrics.append(0.0)
 			if key in participation_rate_dictionary.keys():
 				current_reviewer_metrics.append(participation_rate_dictionary[key])
 			else:
-				current_reviewer_metrics.append(0)
+				current_reviewer_metrics.append(0.0)
 			if key in remaining_reviews_dictionary.keys():
 				current_reviewer_metrics.append(remaining_reviews_dictionary[key])
 			else:
 				current_reviewer_metrics.append(0)
 			final_metrics_dictionary[key] = current_reviewer_metrics
-	print(final_metrics_dictionary)
+	return final_metrics_dictionary
 
 
 df = pd.read_json('return_trip/data_cleaned_for_promise.json')
@@ -407,10 +415,20 @@ test_size = int(total_changes*.1)
 
 print(test_size)
 
+change_number_list = []
+
+actual_revs_list = []
+
+metrics_list = []
+
 for i in range(0,3):
 	df_tail = find_last_comments(df, 1)
 
 	print(len(df))
 
-	compute_metrics(df, df_tail)
+	final_metrics_dictionary = compute_metrics(df, df_tail)
+
+	print(final_metrics_dictionary)
+
+	# change_number_list.append()
 
